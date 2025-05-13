@@ -5,9 +5,9 @@ def create_connection():
     try:
         connection = mysql.connector.connect(
             host='localhost',
-            database='furniture_upholstery',  # Your database name
+            database='upholstery_order_tracker',  # Your database name
             user='root',  # Your MySQL user
-            password='password'  # Your MySQL password
+            password='leopard25'  # Your MySQL password
         )
         if connection.is_connected():
             return connection
@@ -18,3 +18,4 @@ def create_connection():
 def close_connection(connection):
     if connection and connection.is_connected():
         connection.close()
+        print("connection closed")

@@ -1,11 +1,16 @@
 from flask import Flask
-from backend.db import create_connection  # Import database connection functions
+from db import create_connection, close_connection
 
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Welcome to Lousso Designs!"
+    connection = create_connection()
+    if connection:
+        close_connection(connection)
+        return "Database connection test successful!"
+    else:
+        return "Failed to connect to the database."
 
 @app.route('/get-data')
 def get_data():
