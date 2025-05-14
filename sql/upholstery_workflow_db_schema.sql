@@ -21,6 +21,9 @@ CREATE TABLE Orders (
     due_date DATE,
     status VARCHAR(50),
     notes TEXT,
+    barcode_value VARCHAR(225),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (customer_id) REFERENCES Customers(customer_id)
 );
 
