@@ -1,35 +1,38 @@
-from flask import Blueprint, request, jsonify
-from db import get_db
+import uuid
+from db import create_connection
 import barcode
 from barcode.writer import ImageWriter
-import os
-import uuid
+from io import BytesIO
+import base64
 
-order_bp = Blueprint('order', __name__)
-#             raise Error("Failed to connect to database.") 
+def generate_barcode():
+    return uuid.uuid4().hex[:12]
 
-@order_bp.route('/submit_order', methods=['POST'])
-def submit_order():
-    data = request.get_json()
-    customer_name = data.get('customer_name')
-    product = data.get('product')
+def generate_barcode_image(order_id: str) -> str:
+    CODE128 = barcode.get_barcode_class('code128')
+    barcode_obj = CODE128(order_id, writer=ImageWriter())
 
-    barcode_value = str(uuid.uuid4())
+    buffer = BytesIO()
+    barcode_obj.write(buffer)
+    img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    return img_str
 
-    #barcode image generator
-    barcode_path = f"static/barcodes/{barcode_value}.png"
-    code128 = barcode.get_barcode_class('code128')
-    barcode_obj = code128(barcode_value, writer=ImageWriter())
-    barcode_obj.save(barcode_path)
-    
-    # Save order to database
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO orders (customer_name, product, barcode_value, barcode_path) VALUES (%s, %s, %s, %s)",
-        (customer_name, product, barcode_value, barcode_path)
-    )
-    conn.commit()
-    cursor.close()
-    return jsonify({"message": "Order submitted successfully", "barcode_value": barcode_value})
+def process_order(customer_name, product):
+    connection = create_connection()
+    if not connection:
+        return None
 
+    barcode = generate_barcode()
+    try:
+        cursor = connection.cursor()
+        cursor.execute("""
+            INSERT INTO orders (customer_name, product, barcode)
+            VALUES (%s, %s, %s)
+        """, (customer_name, product, barcode))
+        connection.commit()
+        return barcode
+    except Exception as e:
+        print("Database error:", e)
+        return None
+    finally:
+        connection.close()
