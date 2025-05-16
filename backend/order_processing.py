@@ -39,7 +39,7 @@ def insert_order(customer_id, status='New', notes=None):
 def generate_barcode_image(order_id):
     """
     Generates a Code128 barcode for `order_id` and returns
-    a Base64-encoded PNG.
+    a Base64-encoded PNG image.
     """
     CODE128 = barcode.get_barcode_class('code128')
     barcode_obj = CODE128(order_id, writer=ImageWriter())

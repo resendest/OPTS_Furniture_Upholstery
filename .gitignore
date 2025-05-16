@@ -1,2 +1,2 @@
 # Ignore the .env file containing sensitive information
-mysql_db_opts.env
+.env
