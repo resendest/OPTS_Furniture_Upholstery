@@ -6,6 +6,19 @@ DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS tasks;
 DROP TABLE IF EXISTS employees;
 DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS order_milestones;
+-- This SQL script creates the necessary tables for the order management system.
+-- The tables include customers, products, tasks, employees, orders, order_items,
+-- item_workflow, scan_events, and order_milestones.
+-- Each table is designed to store relevant information and relationships
+-- between different entities in the system.
+-- The schema is designed to support an order management system with
+-- features such as tracking customers, products, tasks, employees,
+-- orders, order items, workflows, scan events, and milestones.
+-- The tables are created with appropriate data types, constraints, and relationships
+-- to ensure data integrity and support the functionality of the system.    
+-- This script is intended to be run in a PostgreSQL database.
+-- SQL script to create the order management system schema  
 
 -- 1. customers
 CREATE TABLE customers (
@@ -85,4 +98,17 @@ CREATE TABLE scan_events (
     scan_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(20) NOT NULL CHECK (status IN ('Started', 'Completed')),
     notes TEXT
+);
+
+-- 9. order_milestones
+CREATE TABLE order_milestones (
+    milestone_id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES orders(order_id) ON DELETE CASCADE,
+    milestone_name TEXT NOT NULL,
+    stage_number INT,
+    updated_by TEXT,
+    notes TEXT,
+    timestamp TIMESTAMP DEFAULT NOW(),
+    is_client_action BOOLEAN DEFAULT FALSE,
+    is_approved BOOLEAN DEFAULT FALSE
 );
