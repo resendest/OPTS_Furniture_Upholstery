@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template, request, redirect, url_for, send_from_directory, flash
-from backend.order_processing import insert_order
+from backend.order_processing import create_order
 from backend.db import query_db, execute_db
 import os
 from dotenv import load_dotenv
@@ -16,7 +16,7 @@ def index():
     if request.method == 'POST':
         customer = request.form['customer']
         product = request.form['product']
-        info = insert_order(customer, product, BASE_URL)
+        info = create_order(customer, product, BASE_URL)
         flash('Order created successfully!', 'success')
         return redirect(url_for('order_created', order_id=info['order_id']))
     return render_template('index.html')
