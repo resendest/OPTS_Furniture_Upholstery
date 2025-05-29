@@ -10,33 +10,85 @@ TEMPLATE_DIR = BASE_DIR / 'templates'
 
 env = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR))
 
-def create_order(customer_name: str, product_name: str, base_url: str) -> dict:
+def create_order(
+    customer_id: int,
+    product_id:  int,
+    milestone_list: list[str],
+    base_url:     str,
+    due_date:     str | None = None,
+    notes:        str | None = None
+) -> dict:
     # 1. insert order row & return id
     row = execute(
-        """
-        INSERT INTO orders (customer_name, product_name, stage, timestamp_updated)
-        VALUES (%s, %s, 'Pending', NOW())
-        RETURNING order_id
-        """, (customer_name, product_name))
+    """
+    INSERT INTO orders (customer_id, due_date, notes)
+    VALUES (%s, %s, %s)
+    RETURNING order_id
+    """,
+    (customer_id, due_date, notes)
+)
     order_id = row['order_id']
 
+    item = execute(
+        """
+        INSERT INTO order_items (order_id, product_id, description, status)
+        VALUES (%s, %s, %s, 'Pending')
+        RETURNING item_id
+        """,
+        (order_id, product_id, None)
+    )
+    item_id = item['item_id']
+
+    execute(
+    """
+    INSERT INTO order_milestones (order_id, milestone_name, stage_number)
+    SELECT %s, m.name, m.seq
+    FROM   UNNEST(%s::text[]) WITH ORDINALITY AS m(name, seq)
+    """,
+    (order_id, milestone_list)
+)
     # 2. gen QR & update row
     qr_path = generate_order_qr(order_id, base_url, os.path.join(BASE_DIR, 'static', 'qr'))
     execute("UPDATE orders SET qr_path=%s WHERE order_id=%s", (qr_path, order_id))
 
+        # ── Fetch human-readable names for customer and product ──
+             # Note: This assumes customer_id and product_id are valid and exist in the database.
+    cust_row = execute(
+        "SELECT name FROM customers WHERE customer_id = %s",
+        (customer_id,)
+    )
+    prod_row = execute(
+        "SELECT name FROM products WHERE product_id = %s",
+        (product_id,)
+    )
+    customer_name = cust_row['name']
+    product_name  = prod_row['name']
+
+
     # 3. create PDF work order & update row
-    pdf_path = generate_work_order_pdf(order_id, customer_name, product_name, qr_path)
+    pdf_path = generate_work_order_pdf(
+        order_id, 
+        customer_name, 
+        product_name, 
+        qr_path
+        )
     execute("UPDATE orders SET pdf_path=%s WHERE order_id=%s", (pdf_path, order_id))
 
     return {
         'order_id': order_id,
         'qr_path': qr_path,
-        'pdf_path': pdf_path
+        'pdf_path': pdf_path,
+        'item_id': item_id
     }
 
-def generate_work_order_pdf(order_id, customer, product, qr_path):
+def generate_work_order_pdf(order_id, customer_name, product_name, qr_path):
     template = env.get_template('work_order.html')
-    html = template.render(order_id=order_id, customer_name=customer, product_name=product, qr_path=qr_path, date=datetime.now().strftime('%B %d, %Y'))
+    html = template.render(order_id=order_id, 
+                           customer_name=customer_name, 
+                           product_name=product_name, 
+                           qr_path=qr_path, 
+                           date=datetime.now().strftime('%B %d, %Y')
+                           )
     output_dir = BASE_DIR / 'static' / 'work_orders'
     output_dir.mkdir(parents=True, exist_ok=True)
     pdf_file = output_dir / f'order_{order_id}.pdf'

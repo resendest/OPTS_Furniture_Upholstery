@@ -3,6 +3,9 @@ from backend.order_processing import create_order
 from backend.db import query_db, execute_db
 import os
 from dotenv import load_dotenv
+from backend.shop_routes import shop_bp
+
+app.register_blueprint(shop_bp)
 
 load_dotenv()
 app = Flask(__name__)

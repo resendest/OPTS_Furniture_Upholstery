@@ -66,7 +66,9 @@ CREATE TABLE orders (
     notes TEXT,
     barcode_value VARCHAR(225),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN qr_path TEXT,
+	ADD COLUMN pdf_path TEXT;
 );
 
 -- 6. order_items
