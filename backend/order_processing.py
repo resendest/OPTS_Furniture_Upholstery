@@ -1,8 +1,24 @@
 from datetime import datetime
-from backend.db import execute
+from backend.db import execute, query
 from backend.qr_utils import generate_order_qr
 import os
 import pdfkit, jinja2, pathlib, dotenv
+
+def create_quote(customer_name, customer_address, product_id, photos, quoted_cost):
+    sql = """
+    INSERT INTO quotes(customer_name, customer_address, product_id, photos, quoted_cost, status, created_at)
+    VALUES (%s, %s, %s, %s, %s, 'pending', NOW())
+    RETURNING id, created_at;
+    """
+    return execute(sql, [customer_name, customer_address, product_id, photos, quoted_cost])
+
+
+def get_quote(quote_id):
+    return query("SELECT * FROM quotes WHERE id = %s", [quote_id])[0]
+
+
+def update_quote_status(quote_id, status):
+    execute("UPDATE quotes SET status = %s, responded_at = NOW() WHERE id = %s", [status, quote_id])
 
 # Locate templates dir for standalone PDF generation
 BASE_DIR = pathlib.Path(__file__).resolve().parent.parent

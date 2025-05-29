@@ -1,15 +1,21 @@
-from flask import Flask, request, jsonify, render_template, request, redirect, url_for, send_from_directory, flash
+from flask import Flask, request, jsonify, render_template, redirect, url_for, send_from_directory, flash
 from backend.order_processing import create_order
 from backend.db import query_db, execute_db
 import os
 from dotenv import load_dotenv
 from backend.shop_routes import shop_bp
 
-app.register_blueprint(shop_bp)
-
+# Load environment variables
 load_dotenv()
+
+
+# Create Flask app and register shop blueprint
+
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
+
+app.register_blueprint(shop_bp)
+
 
 BASE_URL=os.getenv('BASE_URL').rstrip('/')
 
@@ -19,7 +25,7 @@ def index():
     if request.method == 'POST':
         customer = request.form['customer']
         product = request.form['product']
-        info = create_order(customer, product, BASE_URL)
+        info = create_order(customer, product, [], BASE_URL)
         flash('Order created successfully!', 'success')
         return redirect(url_for('order_created', order_id=info['order_id']))
     return render_template('index.html')
@@ -31,7 +37,7 @@ def order_created(order_id):
     return render_template('order_created.html', order=order)
 
 # -- Update stage via QR --
-@app.route('/update_stage/<int:order_id>', methods=['GET', 'POST'])
+@app.route('/scan/<int:order_id>', methods=['GET', 'POST'])
 def update_stage(order_id):
     order = query_db('SELECT * FROM orders WHERE order_id=%s', (order_id,))[0]
     message = None
