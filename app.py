@@ -1,96 +1,148 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for, send_from_directory, flash
+import os
+from datetime import datetime
+
+from flask import (
+    Flask, request, jsonify, render_template,
+    redirect, url_for, send_from_directory, flash
+)
+from dotenv import load_dotenv
+
+# Backend imports
 from backend.order_processing import create_order
 from backend.db import query, execute
-import os
-from dotenv import load_dotenv
 from backend.shop_routes import shop_bp
-from backend.qr_utils import generate_order_qr
 
-# Load environment variables
+# Load environment variables from .env
 load_dotenv()
 
-
-# Create Flask app and register shop blueprint
-
 app = Flask(__name__)
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = os.getenv("SECRET_KEY", "dev_secret")
 
+# Register the Blueprint that handles /scan/<order_id>
 app.register_blueprint(shop_bp)
 
+# Ensure BASE_URL is set in .env (used internally by create_order)
+BASE_URL = os.getenv("BASE_URL", "http://localhost:5000").rstrip("/")
 
-BASE_URL=os.getenv('BASE_URL').rstrip('/')
 
-# -- Home / new order form --
+# ----------------------------
+# HOME / NEW ORDER FORM
+# ----------------------------
+@app.route("/", methods=["GET", "POST"])
 def index():
-    if request.method == 'POST':
-        # Example: if your form fields are named "customer_id" and "invoice_no"
+    """
+    Renders a form (index.html) to create a new order.
+    On POST, validates inputs and calls create_order().
+    """
+    if request.method == "POST":
+        # Validate and parse customer_id
         try:
-            customer_id = int(request.form['customer_id'])
+            customer_id = int(request.form["customer_id"])
         except (KeyError, ValueError):
-            flash('Invalid customer ID.', 'error')
-            return redirect(url_for('index'))
+            flash("Invalid customer ID.", "error")
+            return redirect(url_for("index"))
 
-        invoice_no = request.form.get('invoice_no', '').strip()
+        # Validate invoice_no
+        invoice_no = request.form.get("invoice_no", "").strip()
         if not invoice_no:
-            flash('Invoice number cannot be empty.', 'error')
-            return redirect(url_for('index'))
+            flash("Invoice number cannot be empty.", "error")
+            return redirect(url_for("index"))
 
-        # If you eventually collect item‐line dictionaries, build them here.
-        items = []            # e.g. [{"description": "...", "quantity": 1, …}, …]
-        milestone_list = []   # e.g. ["Cutting", "Assembly", "Finishing"], etc.
+        # (Optional) Build lists from form inputs
+        items = []           # e.g., [{"product_id": 2, "quantity": 1}, …]
+        milestone_list = []  # e.g., ["Cutting", "Assembly", "Inspection"]
 
-        # Call create_order with the correct signature
-        info = create_order(
-            customer_id=customer_id,
-            invoice_no=invoice_no,
-            items=items,
-            milestone_list=milestone_list,
-            base_url=BASE_URL
-        )
+        # Call create_order() without passing base_url explicitly
+        try:
+            info = create_order(
+                customer_id=customer_id,
+                invoice_no=invoice_no,
+                items=items,
+                milestone_list=milestone_list
+            )
+        except Exception as e:
+            flash(f"Error creating order: {e}", "error")
+            return redirect(url_for("index"))
 
-        flash(f'Order #{info["order_id"]} created successfully!', 'success')
-        return redirect(url_for('order_created', order_id=info['order_id']))
+        flash(f"Order #{info['order_id']} created successfully!", "success")
+        return redirect(url_for("order_created", order_id=info["order_id"]))
 
-    return render_template('index.html')
+    # On GET, render the new-order form
+    return render_template("index.html", current_year=datetime.now().year)
 
 
-# -- Confirmation page --
-@app.route('/order_created/<int:order_id>')
+# ----------------------------
+# ORDER CONFIRMATION PAGE
+# ----------------------------
+@app.route("/order_created/<int:order_id>")
 def order_created(order_id):
-    order = query('SELECT * FROM orders WHERE order_id=%s', (order_id,))[0]
-    return render_template('order_created.html', order=order)
+    """
+    Shows a confirmation page (order_created.html)
+    after create_order() succeeds.
+    """
+    order = query("SELECT * FROM orders WHERE order_id = %s", (order_id,))
+    if not order:
+        flash(f"Order #{order_id} not found.", "error")
+        return redirect(url_for("index"))
 
-# -- Update stage via QR --
-@app.route('/scan/<int:order_id>', methods=['GET', 'POST'])
-def update_stage(order_id):
-    order = query('SELECT * FROM orders WHERE order_id=%s', (order_id,))[0]
-    message = None
-    if request.method == 'POST':
-        if not request.form.get('confirm'):
-            message = 'Please confirm details.'
-        else:
-            new_stage = request.form['stage']
-            execute('UPDATE orders SET stage=%s, timestamp_updated=NOW() WHERE order_id=%s', (new_stage, order_id))
-            order['stage'] = new_stage
-            message = f'Stage updated to {new_stage}.'
-    return render_template('update_stage.html', **order, message=message)
+    return render_template(
+        "order_created.html",
+        order=order[0],
+        current_year=datetime.now().year
+    )
 
-# -- Manager dashboard --
-@app.route('/orders_overview')
+
+# ----------------------------
+# MANAGER DASHBOARD
+# ----------------------------
+@app.route("/orders_overview")
 def orders_overview():
-    orders = query('SELECT * FROM orders ORDER BY timestamp_updated DESC')
-    return render_template('orders_overview.html', orders=orders)
+    """
+    Displays all orders ordered by last updated timestamp
+    (orders_overview.html).
+    """
+    orders = query("SELECT * FROM orders ORDER BY timestamp_updated DESC", ())
+    return render_template(
+        "orders_overview.html",
+        orders=orders,
+        current_year=datetime.now().year
+    )
 
-# -- Customer view --
-@app.route('/order_status/<int:order_id>')
+
+# ----------------------------
+# CUSTOMER VIEW
+# ----------------------------
+@app.route("/order_status/<int:order_id>")
 def order_status(order_id):
-    order = query('SELECT * FROM orders WHERE order_id=%s', (order_id,))[0]
-    return render_template('order_status.html', order=order)
+    """
+    Renders a page (order_status.html) where customers
+    can view order details and status.
+    """
+    order = query("SELECT * FROM orders WHERE order_id = %s", (order_id,))
+    if not order:
+        flash(f"Order #{order_id} not found.", "error")
+        return redirect(url_for("index"))
 
-# -- Serve work‑order PDFs --
-@app.route('/work_orders/<path:filename>')
+    return render_template(
+        "order_status.html",
+        order=order[0],
+        current_year=datetime.now().year
+    )
+
+
+# ----------------------------
+# SERVE WORK-ORDER PDFs
+# ----------------------------
+@app.route("/work_orders/<path:filename>")
 def work_orders(filename):
-    return send_from_directory('static/work_orders', filename)
+    """
+    Serves generated PDF files under static/work_orders.
+    """
+    return send_from_directory("static/work_orders", filename)
 
-if __name__ == '__main__':
+
+# ----------------------------
+# RUN THE APP
+# ----------------------------
+if __name__ == "__main__":
     app.run(debug=True)

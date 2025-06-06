@@ -1,35 +1,45 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Basic Meta Tags -->
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  
+  <!-- Page Title Block (override in child templates) -->
   <title>{% block title %}OPTS Upholstery Tracker{% endblock %}</title>
+  
+  <!-- Global Styles: fonts, layout resets, and image responsiveness -->
   <style>
-    /* Global styles */
+    /* ---- Typography & Layout ---- */
     body {
       font-family: Arial, sans-serif;
-      margin: 2rem;
-      line-height: 1.5;
+      margin: 1.5rem;
+      line-height: 1.6;
       color: #333;
+      background-color: #fafafa;
     }
-
     header, footer {
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
-
-    header h2 {
+    header h2, footer p {
       margin: 0;
-      font-size: 1.5rem;
     }
 
-    footer p {
-      margin: 0.5rem 0 0 0;
-      font-size: 0.9rem;
-      color: #666;
+    /* ---- Image Processing & Responsiveness ---- */
+    /* All images should scale down on mobile screens */
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+    /* Logo in header: constrain height, maintain aspect ratio */
+    .logo {
+      max-height: 50px;
+      width: auto;
     }
 
-    /* Table styling */
+    /* ---- Table Styling ---- */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -43,13 +53,17 @@
       background-color: #f7f7f7;
       text-align: left;
     }
+    /* Ensure table scrolls on narrow screens */
+    .table-wrapper {
+      overflow-x: auto;
+    }
 
-    /* Button styling */
+    /* ---- Button Styling ---- */
     button {
       cursor: pointer;
       border: 1px solid #888;
       background-color: #f2f2f2;
-      padding: 4px 8px;
+      padding: 6px 12px;
       border-radius: 4px;
       transition: background-color 0.2s;
     }
@@ -57,32 +71,63 @@
       background-color: #e2e2e2;
     }
 
-    /* PDF-specific adjustments */
+    /* ---- Responsive Form Utility ---- */
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+    .form-row label {
+      flex: 1 0 100%;
+      font-weight: bold;
+    }
+    .form-row select, .form-row button, .form-row input {
+      flex: 1 0 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    @media (min-width: 480px) {
+      .form-row label {
+        flex: 0 0 120px;
+      }
+      .form-row select, .form-row input {
+        flex: 1 1 auto;
+      }
+      .form-row button {
+        flex: 0 0 auto;
+      }
+    }
+
+    /* ---- Print Styles (for PDFs) ---- */
     @media print {
       header, footer {
         display: none;
       }
       body {
         margin: 1rem;
+        background-color: white;
       }
     }
   </style>
+  
+  <!-- Placeholder for extra <head> content in child templates -->
   {% block extra_head %}{% endblock %}
 </head>
 <body>
-  <header>
-    <h2>{% block header %}Lousso Upholstery Portal{% endblock %}</h2>
-    <hr />
-  </header>
+  <!-- ===== HEADER ===== -->
+  <header style="display: flex; align-items: center; justify-content: space-between;">
+    <!-- Logo on the left: place your logo file under static/images/ -->
+    <div>
+      <img 
+        src="{{ url_for('static', filename='images/logo.png') }}" 
+        alt="Lousso Designs Logo" 
+        class="logo" 
+      />
+    </div>
+    <!-- Page-specific header text -->
+    <div>
+      <h2 style="font-size: 1.5rem;"
 
-  <main>
-    {% block content %}{% endblock %}
-  </main>
 
-  <footer>
-    <hr />
-    <p>&copy; Lousso Designs</p>
-  </footer>
-</body>
-</html>
-```

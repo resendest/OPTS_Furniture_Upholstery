@@ -1,62 +1,148 @@
 {% extends "base.html" %}
 
-{% block content %}
-  <h1>Order #{{ order_id }} Milestones</h1>
-  <table style="width:100%; border-collapse: collapse;">
-    <thead>
-      <tr>
-        <th style="border-bottom:1px solid #ddd; padding: 8px; text-align: center;">Stage #</th>
-        <th style="border-bottom:1px solid #ddd; padding: 8px; text-align: left;">Milestone</th>
-        <th style="border-bottom:1px solid #ddd; padding: 8px; text-align: center;">Client Action?</th>
-        <th style="border-bottom:1px solid #ddd; padding: 8px; text-align: center;">Approved?</th>
-        <th style="border-bottom:1px solid #ddd; padding: 8px; text-align: center;">Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for m in milestones %}
-        <tr>
-          <td style="border-bottom:1px solid #ddd; padding: 8px; text-align: center;">{{ m.stage_number }}</td>
-          <td style="border-bottom:1px solid #ddd; padding: 8px; text-align: left;">{{ m.milestone_name }}</td>
-          <td style="border-bottom:1px solid #ddd; padding: 8px; text-align: center;">{{ "Yes" if m.is_client_action else "No" }}</td>
-          <td style="border-bottom:1px solid #ddd; padding: 8px; text-align: center;">{{ "✓" if m.is_approved else "✗" }}</td>
-          <td style="border-bottom:1px solid #ddd; padding: 8px; text-align: center;">
-            {% if not m.is_approved %}
-              <button
-                type="button"
-                onclick="updateMilestone('{{ m.milestone_id }}', 'Started')"
-                style="margin-right: 0.5rem; padding: 4px 8px;"
-              >Start</button>
-              <button
-                type="button"
-                onclick="updateMilestone('{{ m.milestone_id }}', 'Completed')"
-                style="padding: 4px 8px;"
-              >Complete</button>
-            {% else %}
-              <em>Done</em>
-            {% endif %}
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{% block title %}Order #{{ order_id }} Scan{% endblock %}
 
-  <script>
-    function updateMilestone(milestoneId, status) {
-      fetch("/scan/{{ order_id }}", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ milestone_id: milestoneId, status: status })
-      })
-      .then(function(response) {
-        return response.json();
-      })
-      .then(function(data) {
-        console.log("Update response:", data);
-        window.location.reload();
-      })
-      .catch(function(error) {
-        console.error("Error:", error);
-      });
+{% block extra_head %}
+  <style>
+    /* Ensure table scrolls on small screens */
+    .table-wrapper {
+      overflow-x: auto;
+      margin-top: 1rem;
     }
-  </script>
+
+    /* Make form fields stack on narrow screens */
+    .scan-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .scan-form label {
+      flex: 1 0 100%;
+      font-weight: bold;
+    }
+    .scan-form select,
+    .scan-form button {
+      flex: 1 0 100%;
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+
+    @media (min-width: 480px) {
+      /* Side‐by‐side on slightly larger screens */
+      .scan-form label {
+        flex: 0 0 120px;
+      }
+      .scan-form select {
+        flex: 1 1 auto;
+      }
+      .scan-form button {
+        flex: 0 0 auto;
+      }
+    }
+  </style>
 {% endblock %}
+
+
+{% block content %}
+  <!-- Page Heading -->
+  <h1 style="margin-bottom: 1rem;">Order #{{ order_id }} Milestones</h1>
+
+  <!-- Logo (optional) -->
+  <!-- If you want a small logo above the form, uncomment and adjust the path: -->
+  <!--
+  <div style="text-align: center; margin-bottom: 1rem;">
+    <img src="{{ url_for('static', filename='images/logo.png') }}"
+         alt="Company Logo"
+         style="max-width: 150px; height: auto;" />
+  </div>
+  -->
+
+  <!-- Dropdown + Status Form -->
+  <form class="scan-form" onsubmit="submitMilestone(event)">
+    <label for="milestoneSelect">Select Milestone:</label>
+    <select id="milestoneSelect" required>
+      <option value="" disabled selected>-- Choose milestone --</option>
+      {% for m in milestones %}
+        {% if not m.is_approved %}
+          <option value="{{ m.milestone_id }}">
+            Stage {{ m.stage_number }}: {{ m.milestone_name }}
+          </option>
+        {% endif %}
+      {% endfor %}
+    </select>
+
+    <label for="statusSelect">Set Status:</label>
+    <select id="statusSelect" required>
+      <option value="" disabled selected>-- Choose status --</option>
+      <option value="Started">Started</option>
+      <option value="Cutting">Cutting</option>
+      <option value="Sewing">Sewing</option>
+      <option value="Awaiting Quality Control Check">Finishing</option>
+      <option value="Passed Quality Control, Awaiting Delivery">Passed Quality Control, Awaiting Delivery</option>
+      <option value="Out for Delivery">Out for Delivery</option>
+    </select>
+
+    <button type="submit" style="background-color: #4CAF50; color: white; border: none; border-radius: 4px;">
+      Submit
+    </button>
+  </form>
+
+  <!-- Milestones Table (current statuses) -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Stage #</th>
+          <th>Milestone</th>
+          <th>Client Action?</th>
+          <th>Approved?</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in milestones %}
+          <tr>
+            <td>{{ m.stage_number }}</td>
+            <td>{{ m.milestone_name }}</td>
+            <td>{{ "Yes" if m.is_client_action else "No" }}</td>
+            <td>{{ "✓" if m.is_approved else "✗" }}</td>
+            <td>
+              {% if not m.is_approved %}
+                <button
+                  type="button"
+                  onclick="updateMilestone('{{ m.milestone_id }}', 'Started')"
+                >Start</button>
+                <button
+                  type="button"
+                  onclick="updateMilestone('{{ m.milestone_id }}', 'Completed')"
+                >Complete</button>
+              {% else %}
+                <em>Done</em>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <script>
+      function updateMilestone(milestoneId, status) {
+        fetch("/scan/{{ order_id }}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ milestone_id: milestoneId, status: status })
+        })
+        .then(function(response) {
+          return response.json();
+        })
+        .then(function(data) {
+          console.log("Update response:", data);
+          window.location.reload();
+        })
+        .catch(function(error) {
+          console.error("Error:", error);
+        });
+      }
+    </script>
