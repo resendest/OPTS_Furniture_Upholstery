@@ -1,0 +1,88 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{% block title %}OPTS Upholstery Tracker{% endblock %}</title>
+  <style>
+    /* Global styles */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      line-height: 1.5;
+      color: #333;
+    }
+
+    header, footer {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    footer p {
+      margin: 0.5rem 0 0 0;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5rem;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    th {
+      background-color: #f7f7f7;
+      text-align: left;
+    }
+
+    /* Button styling */
+    button {
+      cursor: pointer;
+      border: 1px solid #888;
+      background-color: #f2f2f2;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #e2e2e2;
+    }
+
+    /* PDF-specific adjustments */
+    @media print {
+      header, footer {
+        display: none;
+      }
+      body {
+        margin: 1rem;
+      }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <header>
+    <h2>{% block header %}Lousso Upholstery Portal{% endblock %}</h2>
+    <hr />
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <hr />
+    <p>&copy; Lousso Designs</p>
+  </footer>
+</body>
+</html>
+```
