@@ -13,21 +13,26 @@
     {% endif %}
   </div>
 
-  <!-- Embed the Work Order PDF for the customer -->
-  {% if order.pdf_path %}
+ {# -------- Client‐Facing PDF (Invoice/Quote) -------- #}
+  {% if order.client_pdf_path %}
     <div style="margin-bottom: 1.5rem;">
-      <h2>Work Order PDF</h2>
+      <h2>Invoice / Quote (Client Copy)</h2>
       <iframe
-        src="{{ url_for('work_orders', filename='order_' ~ order.order_id ~ '.pdf') }}"
+        src="{{ url_for('work_orders', filename=order.client_pdf_path | replace('static/work_orders/', '') ) }}"
         width="100%"
         height="500px"
         style="border: 1px solid #ccc;"
       >
-        Your browser does not support iframes. 
-        <a href="{{ url_for('work_orders', filename='order_' ~ order.order_id ~ '.pdf') }}">
+        Your browser does not support iframes.
+        <br />
+        <a href="{{ url_for('work_orders', filename=order.client_pdf_path | replace('static/work_orders/', '') ) }}">
           Download PDF
         </a>
       </iframe>
+    </div>
+  {% else %}
+    <div style="color: #666; margin-bottom: 1.5rem;">
+      No client PDF available at this time.
     </div>
   {% endif %}
 

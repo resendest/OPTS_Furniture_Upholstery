@@ -15,26 +15,30 @@
       <p><strong>PDF Path:</strong> {{ order.pdf_path }}</p>
     {% endif %}
   </div>
-
-  <!-- Link to download the generated PDF -->
-  {% if order.pdf_path %}
-    <p>
+  
+ {# -------- Lousso Staff Work Order PDF -------- #}
+  {% if order.lousso_pdf_path %}
+    <div style="margin-bottom: 1rem;">
+      <h2>Internal Work Order (Lousso)</h2>
       <a
-        href="{{ url_for('work_orders', filename='order_' ~ order.order_id ~ '.pdf') }}"
+        href="{{ url_for('work_orders', filename=order.lousso_pdf_path | replace('static/work_orders/', '') ) }}"
         target="_blank"
         style="
           display: inline-block;
-          margin-right: 1rem;
           background-color: #007BFF;
-          color: white;
+          color: #fff;
           padding: 0.5rem 1rem;
           border-radius: 4px;
           text-decoration: none;
         "
       >
-        Download Work Order PDF
+        Download Lousso PDF
       </a>
-    </p>
+    </div>
+  {% else %}
+    <div style="color: #666; margin-bottom: 1rem;">
+      No internal PDF available yet.
+    </div>
   {% endif %}
 
   <!-- Button to take you directly to the scan page -->

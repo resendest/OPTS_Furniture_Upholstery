@@ -76,10 +76,6 @@ def index():
 # ----------------------------
 @app.route("/order_created/<int:order_id>")
 def order_created(order_id):
-    """
-    Shows a confirmation page (order_created.html)
-    after create_order() succeeds.
-    """
     order = query("SELECT * FROM orders WHERE order_id = %s", (order_id,))
     if not order:
         flash(f"Order #{order_id} not found.", "error")
@@ -87,7 +83,7 @@ def order_created(order_id):
 
     return render_template(
         "order_created.html",
-        order=order[0],
+        order=order[0],                # includes order.lousso_pdf_path
         current_year=datetime.now().year
     )
 
@@ -114,18 +110,21 @@ def orders_overview():
 # ----------------------------
 @app.route("/order_status/<int:order_id>")
 def order_status(order_id):
-    """
-    Renders a page (order_status.html) where customers
-    can view order details and status.
-    """
     order = query("SELECT * FROM orders WHERE order_id = %s", (order_id,))
     if not order:
         flash(f"Order #{order_id} not found.", "error")
         return redirect(url_for("index"))
 
+    milestones = query(
+        "SELECT milestone_id, stage_number, milestone_name, is_client_action, is_approved "
+        "FROM order_milestones WHERE order_id = %s ORDER BY stage_number;",
+        (order_id,)
+    )
+
     return render_template(
         "order_status.html",
-        order=order[0],
+        order=order[0],           # includes order.client_pdf_path
+        milestones=milestones,    # list of milestone dicts
         current_year=datetime.now().year
     )
 
