@@ -1,4 +1,3 @@
-
 from flask import Blueprint, request, render_template, jsonify, session
 from backend.db import execute
 
