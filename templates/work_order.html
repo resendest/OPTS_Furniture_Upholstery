@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Work Order #{{ order_id }}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      line-height: 1.5;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.75rem;
+    }
+    header p {
+      margin: 0.25rem 0;
+      font-size: 1rem;
+      color: #555;
+    }
+    .details {
+      margin-bottom: 1.5rem;
+    }
+    .details table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .details th,
+    .details td {
+      text-align: left;
+      padding: 0.5rem;
+      border-bottom: 1px solid #ddd;
+    }
+    .qr-section {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    .qr-section img {
+      margin: 0.5rem;
+      width: 150px;
+      height: 150px;
+      object-fit: cover;
+      border: 1px solid #ccc;
+    }
+    .footer {
+      margin-top: 3rem;
+      font-size: 0.9rem;
+      color: #777;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header with Work Order title -->
+  <header>
+    <h1>Work Order #{{ order_id }}</h1>
+    <p>Date: {{ date }}</p>
+  </header>
+
+  <!-- Basic details: Invoice Number & Customer Name -->
+  <section class="details">
+    <table>
+      <tr>
+        <th style="width: 25%;">Invoice Number:</th>
+        <td>{{ invoice_no }}</td>
+      </tr>
+      <tr>
+        <th>Customer Name:</th>
+        <td>{{ customer_name }}</td>
+      </tr>
+    </table>
+  </section>
+
+  <!-- QR Code Section: only rendered if include_qr is true -->
+  {% if include_qr and qr_paths %}
+    <section class="qr-section">
+      <h2>Scan to Track Status</h2>
+      {% for qr in qr_paths %}
+        <img src="{{ qr }}" alt="QR Code for Order {{ order_id }}" />
+      {% endfor %}
+      <p>Use a smartphone or scanner to view real-time updates.</p>
+    </section>
+  {% endif %}
+
+  <!-- Footer (e.g., contact info or notes) -->
+  <footer class="footer">
+    <p>Lousso Designs &middot; 480 Neponset St Building 12a &middot; Canton, MA 02021</p>
+    <p>(781) 444-0224 &middot; upholsteryboston.com</p>
+  </footer>
+</body>
+</html>

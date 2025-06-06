@@ -160,6 +160,7 @@ def create_order(
     return {
         "order_id":    order_id,
         "item_ids":    item_ids,
+        "invoice_no": invoice_no,
         "qr_paths":    qr_paths,
         "lousso_pdf":  lousso_pdf,
         "client_pdf":  client_pdf
