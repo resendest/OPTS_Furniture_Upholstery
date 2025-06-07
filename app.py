@@ -24,6 +24,9 @@ app.register_blueprint(shop_bp)
 # Ensure BASE_URL is set in .env (used internally by create_order)
 BASE_URL = os.getenv("BASE_URL", "http://localhost:5000").rstrip("/")
 
+def index():
+    return "<h1 style='color:red'>INDEX ROUTE IS WORKING</h1>"
+
 
 # ----------------------------
 # HOME / NEW ORDER FORM
