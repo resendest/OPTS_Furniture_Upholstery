@@ -1,205 +1,274 @@
-import re
+# backend/order_processing.py
+
+import os
 from datetime import datetime
 import pathlib
 
-import jinja2
-import pdfkit
+from reportlab.lib.pagesizes import LETTER
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+from reportlab.platypus import Table, TableStyle, Image
+from reportlab.lib import colors
 
-from backend.db import execute, query
+from backend.db import execute
 from backend.qr_utils import generate_order_qr
 
-# ──────────────────────────────────────────────────────────────────────────────
-BASE_DIR     = pathlib.Path(__file__).resolve().parent.parent
-TEMPLATE_DIR = BASE_DIR / 'templates'
-QR_DIR       = BASE_DIR / 'static' / 'qr'
-env = jinja2.Environment(loader=jinja2.FileSystemLoader(TEMPLATE_DIR))
+# Project root and static dirs
+BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
+QR_DIR   = BASE_DIR / "static" / "qr"
+WORK_DIR = BASE_DIR / "static" / "work_orders"
+QR_DIR.mkdir(parents=True, exist_ok=True)
+WORK_DIR.mkdir(parents=True, exist_ok=True)
 
-
-def build_item_code(raw_code: str, item_type: str) -> str:
+def make_work_order_pdf(
+    path:          pathlib.Path,
+    order_id:      int,
+    client_name:   str,
+    invoice_no:    str,
+    quantity:      int,
+    item_images:   list[str],
+    fabric_inside: list[str],
+    fabric_outside:list[str],
+    repair_req:    str,
+    fabric_specs:  str,
+    upholstery:    dict,     # e.g. {"back": "Tight Back", "seat": "Plain"}
+    inserts:       dict,     # e.g. {"back": "No", "seat": "No"}
+    insert_types:  dict,     # e.g. {"back": "All Down", "seat": "Foam + Dacron"}
+    trim:          dict,     # e.g. {"style":"Nailheads", "placement":"Seat Edge", "vendor":"Rushin NH1052-06"}
+    finish:        dict,     # e.g. {"type":"Touch-ups","specs":"...", "topcoat":"N/A"}
+    notes:         str,
+    initials:      str,
+    qr_path:       str|None,
+):
     """
-    • For 'fabric': Ensure it starts with 'FAB' + ≥2 digits.
-      - e.g. raw_code='01' → 'FAB01'; raw_code='FAB12' → 'FAB12'
-      - If you pass 'FAB' alone or non‐digits, it raises ValueError.
-    • For 'piece': raw_code must be numeric. Pad left to 4 digits.
-      - e.g. '1' → '0001', '42' → '0042'
-    Raises ValueError if format rules are violated.
+    Draw a single-page work order PDF to `path`. Embeds images, tables, QR.
     """
-    raw = raw_code.strip().upper()
+    c = canvas.Canvas(str(path), pagesize=LETTER)
+    w, h = LETTER
 
-    if item_type == "fabric":
-        if not raw.startswith("FAB"):
-            raw = f"FAB{raw}"
-        suffix = raw[3:]
-        if not (suffix.isdigit() and len(suffix) >= 2):
-            raise ValueError("Fabric code must look like FAB01, FAB12, …")
-        return raw
+    # ------- Header -------
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(0.5*inch, h-0.75*inch, f"Client: {client_name}")
+    c.drawRightString(w-0.5*inch, h-0.75*inch, f"Invoice #: {invoice_no}")
+    c.setFont("Helvetica", 12)
+    c.drawString(0.5*inch, h-1.25*inch, f"Qty: ({quantity})")
 
-    # item_type == "piece"
-    if not raw.isdigit():
-        raise ValueError("Piece code must be numeric (e.g., '1', '12', '42')")
-    return raw.zfill(4)
+    # ------- Images -------
+    def draw_imgs(img_paths, x, y, label):
+        if not img_paths: return
+        c.setFont("Helvetica-Bold",10)
+        c.drawString(x, y, label)
+        x0, y0 = x, y-0.3*inch
+        size = 1.2*inch
+        for i, src in enumerate(img_paths):
+            try:
+                c.drawImage(src, x0+i*(size+0.1*inch), y0-size, size, size)
+            except Exception:
+                pass
 
+    draw_imgs(item_images,        0.5*inch, h-1.75*inch, "Item Image:")
+    draw_imgs(fabric_inside,      3.5*inch, h-1.75*inch, "Inside Fabric:")
+    draw_imgs(fabric_outside,     6.5*inch, h-1.75*inch, "Outside Fabric:")
+
+    # Move cursor down
+    cursor_y = h-3.3*inch
+
+    # ------- Core Options Table -------
+    core_data = [
+        ["Repair/Re-glue", repair_req, "Replace Springs", inserts["back"]],
+        ["Fabric Specs",   fabric_specs, " ", ""]
+    ]
+    tbl = Table(core_data, colWidths=[1.5*inch, 2.5*inch, 1.5*inch, 2.5*inch])
+    tbl.setStyle(TableStyle([
+        ("GRID",(0,0),(-1,-1),0.5,colors.grey),
+        ("BACKGROUND",(0,0),(-1,0),colors.lightgrey),
+        ("VALIGN",(0,0),(-1,-1),"TOP"),
+        ("SPAN",(1,1),(3,1)),  # span specs row
+    ]))
+    w_tbl, h_tbl = tbl.wrap(w-1*inch, cursor_y)
+    tbl.drawOn(c, 0.5*inch, cursor_y - h_tbl)
+    cursor_y -= h_tbl + 0.3*inch
+
+    # ------- Upholstery Styles -------
+    uph_data = [
+        ["Back Style",      upholstery["back"],  "Seat Style",     upholstery["seat"]],
+        ["New Back Insert", inserts["back"],     "New Seat Insert", inserts["seat"]]
+    ]
+    tbl = Table(uph_data, colWidths=[2*inch, 2*inch, 2*inch, 2*inch])
+    tbl.setStyle(TableStyle([
+        ("GRID",(0,0),(-1,-1),0.5,colors.grey),
+        ("BACKGROUND",(0,0),(-1,0),colors.lightgrey),
+        ("VALIGN",(0,0),(-1,-1),"MIDDLE"),
+    ]))
+    w2,h2 = tbl.wrap(w-1*inch, cursor_y)
+    tbl.drawOn(c, 0.5*inch, cursor_y - h2)
+    cursor_y -= h2 + 0.3*inch
+
+    # ------- Insert Types -------
+    ins_data = [
+        ["Back Insert Type", insert_types["back"], "Seat Insert Type", insert_types["seat"]]
+    ]
+    tbl = Table(ins_data, colWidths=[2*inch, 2*inch, 2*inch, 2*inch])
+    tbl.setStyle(TableStyle([("GRID",(0,0),(-1,-1),0.5,colors.grey)]))
+    w3,h3 = tbl.wrap(w-1*inch, cursor_y)
+    tbl.drawOn(c, 0.5*inch, cursor_y - h3)
+    cursor_y -= h3 + 0.3*inch
+
+    # ------- Trim -------
+    trim_data = [
+        ["Trim Style", trim["style"]],
+        ["Placement",  trim["placement"]],
+        ["Vendor/Color", trim["vendor"]]
+    ]
+    tbl = Table(trim_data, colWidths=[1.5*inch, 6.5*inch])
+    tbl.setStyle(TableStyle([("GRID",(0,0),(-1,-1),0.5,colors.grey)]))
+    w4,h4 = tbl.wrap(w-1*inch, cursor_y)
+    tbl.drawOn(c, 0.5*inch, cursor_y - h4)
+    cursor_y -= h4 + 0.3*inch
+
+    # Optional trim image
+    if "image" in trim:
+        try:
+            c.drawImage(trim["image"], 6.0*inch, cursor_y, 1.5*inch, 1.5*inch)
+        except: pass
+
+    # ------- Finish -------
+    fin_data = [
+        ["Frame Finish", finish["type"]],
+        ["Specs",        finish["specs"]],
+        ["Topcoat/Seal", finish["topcoat"] or "N/A"]
+    ]
+    tbl = Table(fin_data, colWidths=[1.5*inch, 6.5*inch])
+    tbl.setStyle(TableStyle([("GRID",(0,0),(-1,-1),0.5,colors.grey)]))
+    w5,h5 = tbl.wrap(w-1*inch, cursor_y - 1.6*inch)
+    tbl.drawOn(c, 0.5*inch, cursor_y - h5)
+    cursor_y -= h5 + 0.3*inch
+
+    # ------- Notes -------
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(0.5*inch, cursor_y, "Notes:")
+    c.setFont("Helvetica", 9)
+    y = cursor_y - 14
+    for line in notes.splitlines():
+        c.drawString(0.6*inch, y, f"• {line}")
+        y -= 12
+    cursor_y = y - 0.3*inch
+
+    # ------- QR (internal only) -------
+    if qr_path:
+        try:
+            c.drawImage(str(QR_DIR/ qr_path.split("/")[-1]),
+                        w-2*inch, 0.8*inch, 1.5*inch, 1.5*inch)
+        except: pass
+
+    # ------- Initials & footer -------
+    c.setFont("Helvetica", 8)
+    c.drawString(0.5*inch, 0.5*inch, f"Customer Initials: {initials}")
+
+    c.showPage()
+    c.save()
 
 def create_order(
-    customer_id:    int,
-    invoice_no:     str,
-    items:          list[dict],
+    name: str,
+    email: str,
+    phone: str,
+    product_codes: list[str],
+    invoice_no: str,
     milestone_list: list[str],
-    base_url:       str,
-    due_date:       str | None = None,
-    notes:          str | None = None,
-    with_qr:        bool = True
+    base_url: str,
+    due_date: str|None = None,
+    notes: str|None = None
 ) -> dict:
-    """
-    1) Insert into orders → returns order_id
-    2) Seed order_milestones using milestone_list
-    3) For each item in items[]:
-         - Normalize code via build_item_code()
-         - Insert into order_items (storing invoice_no & item_code)
-         - Generate + save QR for each item (to order_items.qr_path)
-    4) Generate TWO PDF work orders:
-         a) Lousso copy (include QR)
-         b) Client copy (omit QR)
-    5) Store their paths into orders.lousso_pdf_path and orders.client_pdf_path
-    6) Return {"order_id", "item_ids", "qr_paths", "lousso_pdf", "client_pdf"}
-    """
+    # Auto-create customer by email… [as before]
+    cust = execute("SELECT customer_id FROM customers WHERE email=%s", (email,))
+    if cust:
+        customer_id = cust[0]["customer_id"]
+    else:
+        new = execute(
+            "INSERT INTO customers(name,email,phone) VALUES(%s,%s,%s) RETURNING customer_id",
+            (name, email, phone)
+        )
+        customer_id = new[0]["customer_id"]
 
-    # 1) Insert order header 
-    row = execute(
-        """
-        INSERT INTO orders (customer_id, invoice_no, due_date, notes)
-        VALUES (%s, %s, %s, %s)
-        RETURNING order_id
-        """,
+    # Insert order
+    order_rows = execute(
+        "INSERT INTO orders(customer_id,invoice_no,due_date,notes) VALUES(%s,%s,%s,%s) RETURNING order_id",
         (customer_id, invoice_no, due_date, notes)
     )
-    order_id = row["order_id"]
+    order_id = order_rows[0]["order_id"]
 
-    # 2) Seed order_milestones
-    execute(
-        """
-        INSERT INTO order_milestones (order_id, milestone_name, stage_number)
-        SELECT %s, m.name, m.seq
-        FROM UNNEST(%s::text[]) WITH ORDINALITY AS m(name, seq)
-        """,
-        (order_id, milestone_list)
-    )
-
-    item_ids = []
-    qr_paths = []
-
-    # 3) Loop over each line‐item
-    for itm in items:
-        raw_code  = itm["raw_code"]
-        item_type = itm["item_type"]
-        desc      = itm.get("desc")
-
-        # 3a) Normalize/validate item_code (you likely have a build_item_code helper)
-        item_code = build_item_code(raw_code, item_type)
-
-        # 3b) Insert into order_items
-        row_item = execute(
-            """
-            INSERT INTO order_items
-               (order_id, invoice_no, item_code, item_type, description, status)
-            VALUES (%s,        %s,         %s,        %s,        %s,          'pending')
-            RETURNING item_id
-            """,
-            (order_id, invoice_no, item_code, item_type, desc)
-        )
-        item_id = row_item["item_id"]
-        item_ids.append(item_id)
-
-        # 3c) Generate + save QR for this item
-        qr_path = generate_order_qr(item_id, base_url, QR_DIR)
+    # Milestones
+    for name in milestone_list:
         execute(
-            "UPDATE order_items SET qr_path = %s WHERE item_id = %s",
-            (qr_path, item_id)
+            "INSERT INTO order_milestones (order_id, milestone_name) VALUES (%s, %s)",
+            (order_id, name)
+    )
+
+    # QR
+    qr_url = generate_order_qr(order_id, base_url, str(QR_DIR))
+
+    # Insert each product code
+    for code in product_codes:
+        execute(
+            "INSERT INTO order_items(order_id,product_code,status) VALUES(%s,%s,'Pending')",
+            (order_id, code)
         )
-        qr_paths.append(qr_path)
 
-    # 4) Fetch customer_name (for PDF header)
-    cust_row = query(
-        """
-        SELECT c.name AS customer_name
-        FROM orders o
-        JOIN customers c ON o.customer_id = c.id
-        WHERE o.order_id = %s
-        """,
-        (order_id,)
-    )
-    # Expect exactly one row back
-    customer_name = cust_row[0]["customer_name"]
+    # Pick a quantity
+    quantity = len(product_codes)
 
-    # 5a) Generate BUSINESS (Lousso) PDF WITH QR 
-    lousso_pdf = generate_work_order_pdf(
-        order_id=order_id,
-        invoice_no=invoice_no,
-        customer_name=customer_name,
-        qr_paths=qr_paths,
-        include_qr=True
+    # Prepare images arrays (if any logic exists)
+    item_images    = []  # optionally fill from static/imgs
+    fabric_inside  = []
+    fabric_outside = []
+
+    # Pull any fabric specs, upholstery choices… (pseudo)
+    repair_req    = "No"
+    fabric_specs  = "As per work order"
+    upholstery    = {"back":"Tight Back","seat":"Tight Seat"}
+    inserts       = {"back":"No","seat":"No"}
+    insert_types  = {"back":"Foam + Dacron","seat":"Foam + Dacron"}
+    trim          = {"style":"Nailheads","placement":"Seat Edge","vendor":"Rushin Upholstery NH1052-06"}
+    finish        = {"type":"Touch-ups Only","specs":"Rushin Sealer if req","topcoat":None}
+    initials      = ""  # you can capture from form
+
+    # Generate PDFs
+    slug = name.lower().replace(" ","_")
+    date_str = datetime.now().strftime("%B %d, %Y")
+
+    internal_pdf = WORK_DIR / f"lousso_{slug}_order_{order_id}.pdf"
+    # Internal PDF (with QR)
+    make_work_order_pdf(
+        internal_pdf, order_id,
+        name, invoice_no, quantity,
+        item_images, fabric_inside, fabric_outside,
+        repair_req, fabric_specs,
+        upholstery, inserts, insert_types,
+        trim, finish, notes, initials,
+        qr_path=qr_url
     )
+    print(f"Created internal PDF: {internal_pdf}")
+    # Client PDF (without QR)
+    client_pdf = WORK_DIR / f"client_{slug}_order_{order_id}.pdf"
+    make_work_order_pdf(
+        client_pdf, order_id,
+        name, invoice_no, quantity,
+        item_images, fabric_inside, fabric_outside,
+        repair_req, fabric_specs,
+        upholstery, inserts, insert_types,
+        trim, finish, notes, initials,
+        qr_path=None
+    )
+    print(f"Created client PDF: {client_pdf}")
+
+    # Update DB with file paths
     execute(
-        "UPDATE orders SET lousso_pdf_path = %s WHERE order_id = %s",
-        (lousso_pdf, order_id)
+        "UPDATE orders SET qr_path=%s,lousso_pdf_path=%s,client_pdf_path=%s WHERE order_id=%s",
+        (qr_url,
+         f"/static/work_orders/{internal_pdf.name}",
+         f"/static/work_orders/{client_pdf.name}",
+         order_id)
     )
 
-    # 5b) Generate CLIENT PDF WITHOUT QR
-    client_pdf = generate_work_order_pdf(
-        order_id=order_id,
-        invoice_no=invoice_no,
-        customer_name=customer_name,
-        qr_paths=qr_paths,
-        include_qr=False
-    )
-    execute(
-        "UPDATE orders SET client_pdf_path = %s WHERE order_id = %s",
-        (client_pdf, order_id)
-    )
+    return {"order_id":order_id, "qr":qr_url}
 
-    return {
-        "order_id":    order_id,
-        "item_ids":    item_ids,
-        "invoice_no": invoice_no,
-        "qr_paths":    qr_paths,
-        "lousso_pdf":  lousso_pdf,
-        "client_pdf":  client_pdf
-    }
-
-
-
-def generate_work_order_pdf(
-    order_id: int,
-    invoice_no: str,
-    customer_name: str,
-    qr_paths: list[str],
-    include_qr: bool
-) -> str:
-    """
-    Renders 'work_order.html' with:
-      - order_id, invoice_no, customer_name, qr_paths[], date.
-    Saves a PDF at /static/work_orders/order_{order_id}.pdf, returns that path.
-    In the Jinja template, wrap any <img src="{{ qr }}"> in:
-      {% if user.role == 'staff' %} … {% endif %}
-    so client copies never expose QR images.
-    """
-    # Render HTML with or without QR images
-    html_template = env.get_template("work_order.html").render(
-        order_id = order_id,
-        customer_name = customer_name,
-        qr_paths = qr_paths,
-        include_qr = include_qr,
-        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    )
-
-    # ensure static/work_orders exists
-    output_dir = BASE_DIR / 'static' / 'work_orders'
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    #sanitize customer name for client PDF filename
-    safe_customer_name = re.sub(r'[^a-z0-9]+', '_', customer_name.lower()).strip('_')
-    suffix = 'lousso' if include_qr else 'client'
-    pdf_filename = f"order_{order_id}_{safe_customer_name}_{suffix}.pdf"
-    pdf_path = output_dir / pdf_filename
-
-    return f"/static/work_orders/{pdf_filename}"

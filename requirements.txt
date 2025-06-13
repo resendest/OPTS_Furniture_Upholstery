@@ -1,6 +1,7 @@
 Flask>=2.0
 python-dotenv>=0.19
 psycopg2-binary>=2.9
-pdfkit>=1.0
 qrcode>=7.3
 Jinja2>=3.0
+reportlab>=3.0
+pillow>=8.0

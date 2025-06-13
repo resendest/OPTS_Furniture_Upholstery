@@ -4,114 +4,63 @@
 
 {% block content %}
   <h1>Create New Order</h1>
-
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        <div class="flash {{ category }}">
-          {{ message }}
-        </div>
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-
-  <form action="{{ url_for('index') }}" method="POST">
-    <div class="form-row">
-      <label for="customer_id">Customer ID:</label>
-      <input
-        type="number"
-        id="customer_id"
-        name="customer_id"
-        required
-        placeholder="Enter numeric customer ID"
-      />
-    </div>
-
-    <div class="form-row">
-      <label for="invoice_no">Invoice Number:</label>
-      <input
-        type="text"
-        id="invoice_no"
-        name="invoice_no"
-        required
-        placeholder="Enter invoice number"
-      />
-    </div>
-
+  <form method="POST" action="{{ url_for('index') }}">
+    
     <div class="form-row">
       <label for="customer_name">Customer Name:</label>
-      <input
-        type="text"
-        id="customer_name"
-        name="customer_name"
-        required
-        placeholder="Enter customer name"
-      />
+      <input type="text" id="customer_name" name="customer_name" required />
     </div>
 
     <div class="form-row">
       <label for="customer_email">Customer Email:</label>
-      <input
-        type="email"
-        id="customer_email"
-        name="customer_email"
-        required
-        placeholder="Enter customer email"
-      />
-    </div> 
-
+      <input type="email" id="customer_email" name="customer_email" required />
+    </div>
+    
     <div class="form-row">
       <label for="customer_phone">Customer Phone:</label>
-      <input
-        type="tel"
-        id="customer_phone"
-        name="customer_phone"
-        required
-        placeholder="Enter customer phone number"
-      />
+      <input type="tel" id="customer_phone" name="customer_phone" required />
+    </div>
+
+
+    <div class="form-row">
+      <label for="invoice_no">Invoice Number:</label>
+      <input type="text" id="invoice_no" name="invoice_no" required placeholder="Enter invoice number" />
     </div>
 
     <div class="form-row">
-      <label for="order_type">Order Type:</label>
-      <select id="order_type" name="order_type" required>
-        <option value="" disabled selected>-- Select Order Type --</option>
-        <option value="Custom">Custom</option>
-        <option value="Standard">Standard</option>
+  <label for="product_codes">Product Codes:</label>
+  <textarea
+    id="product_codes"
+    name="product_codes"
+    rows="3"
+    required
+    placeholder="One code per line, e.g.
+0034-01
+0034-FAB01"
+  ></textarea>
+  <small>Enter each invoice-based SKU on its own line.</small>
+</div>
+
+    <div class="form-row">
+      <label for="milestone_list">Milestones:</label>
+      <select id="milestone_list" name="milestone_list" multiple required>
+        <option value="Cutting">Cutting</option>
+        <option value="Assembly">Assembly</option>
+        <option value="Inspection">Inspection</option>
+        <option value="Delivery">Delivery</option>
       </select>
     </div>
 
     <div class="form-row">
-      <label for="order_description">Order Description:</label>
-      <textarea
-        id="order_description"
-        name="order_description"
-        rows="4"
-        required
-        placeholder="Enter order description"
-      ></textarea>
+      <label for="due_date">Due Date:</label>
+      <input type="date" id="due_date" name="due_date" required />
     </div>
 
     <div class="form-row">
-      <label for="order_date">Order Date:</label>
-      <input
-        type="date"
-        id="order_date"
-        name="order_date"
-        required
-      />
+      <label for="notes">Notes:</label>
+      <textarea id="notes" name="notes" placeholder="Any notes…"></textarea>
     </div>
 
-    <div class="form-row">
-      <label for="">Due Date:</label>
-      <input
-        type="date"
-        id="due_date"
-        name="due_date"
-        required
-      />
-
-    <button type="submit" style="margin-top:1rem; background-color:#007BFF; color:white; border:none; border-radius:4px; padding:0.5rem 1rem;">
-      Create Order
-    </button>
+    <button type="submit">Create Order</button>
   </form>
 {% endblock %}
