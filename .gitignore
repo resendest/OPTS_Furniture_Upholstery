@@ -1,5 +1,5 @@
 # Ignore the .env file containing sensitive information
 .env
 
-# Ignore everything in the work_orders folder
-/static/work_orders/
+# Ignore everything in the static folder
+/static
