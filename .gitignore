@@ -2,4 +2,4 @@
 .env
 
 # Ignore everything in the static folder
-/static/
+static/*
