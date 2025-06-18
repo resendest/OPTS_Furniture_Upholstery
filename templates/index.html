@@ -46,8 +46,9 @@
       <select id="milestone_list" name="milestone_list" multiple required>
         <option value="Cutting">Cutting</option>
         <option value="Assembly">Assembly</option>
-        <option value="Inspection">Inspection</option>
-        <option value="Delivery">Delivery</option>
+        <option value="Awaiting Quality Check">Awaiting Quality Check</option>
+        <option value="Passed Quality Check">Passed Quality Check</option>
+        <option value="Out for Delivery">Out for Delivery</option>
       </select>
     </div>
 
@@ -61,6 +62,106 @@
       <textarea id="notes" name="notes" placeholder="Any notes…"></textarea>
     </div>
 
-    <button type="submit">Create Order</button>
+    <legend>Order Specifications</legend>
+
+      <div class="form-row">
+        <label for="quantity">Quantity:</label>
+        <input type="number" id="quantity" name="quantity" min="1" required />
+      </div>
+
+      <div class="form-row">
+        <label>Repair Options:</label>
+        <label><input type="checkbox" name="repair_glue" value="true"> Re-glue</label>
+        <label><input type="checkbox" name="replace_springs" value="true"> Replace Springs</label>
+      </div>
+
+      <div class="form-row">
+        <label for="back_style">Back Style:</label>
+        <select id="back_style" name="back_style" required>
+          <option value="Tight Back">Tight Back</option>
+          <option value="Loose Back">Loose Back</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="seat_style">Seat Style:</label>
+        <select id="seat_style" name="seat_style" required>
+          <option value="Tight Seat">Tight Seat</option>
+          <option value="Loose Seat">Loose Seat</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label>New Back Insert:</label>
+        <label><input type="radio" name="new_back_insert" value="true" required> Yes</label>
+        <label><input type="radio" name="new_back_insert" value="false" required> No</label>
+      </div>
+
+      <div class="form-row">
+        <label>New Seat Insert:</label>
+        <label><input type="radio" name="new_seat_insert" value="true" required> Yes</label>
+        <label><input type="radio" name="new_seat_insert" value="false" required> No</label>
+      </div>
+
+      <div class="form-row">
+        <label for="back_insert_type">Back Insert Type:</label>
+        <select id="back_insert_type" name="back_insert_type">
+          <option value="Foam">Foam</option>
+          <option value="Dacron">Dacron</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="seat_insert_type">Seat Insert Type:</label>
+        <select id="seat_insert_type" name="seat_insert_type">
+          <option value="Foam">Foam</option>
+          <option value="Dacron">Dacron</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label for="trim_style">Trim Style:</label>
+        <input type="text" id="trim_style" name="trim_style" placeholder="e.g. Nailheads" />
+      </div>
+
+      <div class="form-row">
+        <label for="placement">Placement:</label>
+        <input type="text" id="placement" name="placement" placeholder="e.g. Seat Edge" />
+      </div>
+
+      <div class="form-row">
+        <label for="fabric_specs">Fabric Specs:</label>
+        <input type="text" id="fabric_specs" name="fabric_specs" placeholder="e.g. As per work order" />
+      </div>
+
+      <div class="form-row">
+        <label for="vendor_color">Vendor / Color:</label>
+        <input type="text" id="vendor_color" name="vendor_color" placeholder="e.g. Rushin Upholstery NH1052-06" />
+      </div>
+
+      <div class="form-row">
+        <label for="frame_finish">Frame Finish:</label>
+        <input type="text" id="frame_finish" name="frame_finish" placeholder="e.g. Touch-ups Only" />
+      </div>
+
+      <div class="form-row">
+        <label for="specs">Specs:</label>
+        <textarea id="specs" name="specs" placeholder="e.g. Rushin Sealer if req"></textarea>
+      </div>
+
+      <div class="form-row">
+        <label for="topcoat">Topcoat / Seal:</label>
+        <input type="text" id="topcoat" name="topcoat" placeholder="e.g. N/A" />
+      </div>
+
+      <div class="form-row">
+        <label for="customer_initials">Customer Initials:</label>
+        <input type="text" id="customer_initials" name="customer_initials" maxlength="3" />
+      </div>
+    </fieldset>
+
+    <div class="form-row">
+      <button type="submit">Submit Order</button>
+
   </form>
 {% endblock %}

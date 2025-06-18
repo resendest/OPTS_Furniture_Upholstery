@@ -57,6 +57,25 @@ def index():
         due_date = request.form.get("due_date") or None
         notes    = request.form.get("notes")    or None
 
+        # Order specifications
+        quantity          = int(request.form.get("quantity", "1"))
+        repair_glue       = "repair_glue" in request.form
+        replace_springs   = "replace_springs" in request.form
+        back_style        = request.form.get("back_style")
+        seat_style        = request.form.get("seat_style")
+        new_back_insert   = request.form.get("new_back_insert") == "true"
+        new_seat_insert   = request.form.get("new_seat_insert") == "true"
+        back_insert_type  = request.form.get("back_insert_type")
+        seat_insert_type  = request.form.get("seat_insert_type")
+        trim_style        = request.form.get("trim_style")
+        placement         = request.form.get("placement")
+        fabric_specs      = request.form.get("fabric_specs")
+        vendor_color      = request.form.get("vendor_color")
+        frame_finish      = request.form.get("frame_finish")
+        specs_text        = request.form.get("specs")
+        topcoat           = request.form.get("topcoat")
+        customer_initials = request.form.get("customer_initials")
+
        
         try:
             info = create_order(
