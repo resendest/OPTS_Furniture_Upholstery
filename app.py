@@ -9,11 +9,11 @@ from flask import (
 from dotenv import load_dotenv
 
 from backend.order_processing import create_order
+from backend.db import execute
 from backend.shop_routes import shop_bp
 
 # Load environment variables
 load_dotenv()
-
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret")
 
@@ -23,13 +23,13 @@ BASE_URL = os.getenv("BASE_URL", "http://localhost:5000").rstrip("/")
 # Register blueprint
 app.register_blueprint(shop_bp)
 
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
+        app.logger.debug("▶▶▶ FORM DATA: %s", dict(request.form))
 
-        print("▶▶▶ FORM DATA:", dict(request.form))
-
-        # Read customer contact info
+        # ─── Validate basic customer info ──────────────────
         name  = request.form.get("customer_name", "").strip()
         email = request.form.get("customer_email", "").strip()
         phone = request.form.get("customer_phone", "").strip()
@@ -37,12 +37,12 @@ def index():
             flash("Name, email, and phone are required.", "error")
             return redirect(url_for("index"))
 
-        # Parse Product Codes: split textarea into a list of non-empty lines
+        # ─── Product codes ─────────────────────────────────
         raw_codes = request.form.get("product_codes", "").splitlines()
         product_codes = [c.strip() for c in raw_codes if c.strip()]
         if not product_codes:
-           flash("Enter at least one product code.", "error")
-           return redirect(url_for("index"))
+            flash("Enter at least one product code.", "error")
+            return redirect(url_for("index"))
 
         invoice_no = request.form.get("invoice_no", "").strip()
         if not invoice_no:
@@ -57,7 +57,7 @@ def index():
         due_date = request.form.get("due_date") or None
         notes    = request.form.get("notes")    or None
 
-        # Order specifications
+        # ─── Order specs ──────────────────────────────────
         quantity          = int(request.form.get("quantity", "1"))
         repair_glue       = "repair_glue" in request.form
         replace_springs   = "replace_springs" in request.form
@@ -76,7 +76,6 @@ def index():
         topcoat           = request.form.get("topcoat")
         customer_initials = request.form.get("customer_initials")
 
-       
         try:
             info = create_order(
                 name=name,
@@ -87,7 +86,24 @@ def index():
                 milestone_list=milestone_list,
                 base_url=BASE_URL,
                 due_date=due_date,
-                notes=notes
+                notes=notes,
+                quantity=quantity,
+                repair_glue=repair_glue,
+                replace_springs=replace_springs,
+                back_style=back_style,
+                seat_style=seat_style,
+                new_back_insert=new_back_insert,
+                new_seat_insert=new_seat_insert,
+                back_insert_type=back_insert_type,
+                seat_insert_type=seat_insert_type,
+                trim_style=trim_style,
+                placement=placement,
+                fabric_specs=fabric_specs,
+                vendor_color=vendor_color,
+                frame_finish=frame_finish,
+                specs_text=specs_text,
+                topcoat=topcoat,
+                customer_initials=customer_initials,
             )
         except Exception as e:
             app.logger.exception("Error creating order")
@@ -99,13 +115,18 @@ def index():
 
     return render_template("index.html", current_year=datetime.now().year)
 
+
 @app.route("/order_created/<int:order_id>")
 def order_created(order_id):
-    from backend.db import execute
-    rows = execute("SELECT * FROM orders WHERE order_id = %s", (order_id,))
+    # execute() now returns a LIST for SELECTs
+    rows = execute(
+        "SELECT * FROM orders WHERE order_id = %s",
+        (order_id,)
+    )
     if not rows:
         flash(f"Order #{order_id} not found.", "error")
         return redirect(url_for("index"))
+
     order = rows[0]
     return render_template(
         "order_created.html",
@@ -113,9 +134,11 @@ def order_created(order_id):
         current_year=datetime.now().year
     )
 
+
 @app.route("/work_orders/<path:filename>")
 def work_orders(filename):
     return send_from_directory("static/work_orders", filename)
+
 
 if __name__ == "__main__":
     app.run(
