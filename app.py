@@ -11,11 +11,15 @@ from dotenv import load_dotenv
 from backend.order_processing import create_order
 from backend.db import execute
 from backend.shop_routes import shop_bp
+from backend.email_utils import init_mail
 
 # Load environment variables
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret")
+app.config["BASE_URL"] = os.getenv("BASE_URL", "http://localhost:5000").rstrip("/")
+
+init_mail(app)  # Initialize Flask-Mail with app config
 
 # Base URL for QR code links
 BASE_URL = os.getenv("BASE_URL", "http://localhost:5000").rstrip("/")

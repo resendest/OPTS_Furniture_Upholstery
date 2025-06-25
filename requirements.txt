@@ -5,3 +5,4 @@ qrcode>=7.3
 Jinja2>=3.0
 reportlab>=3.0
 pillow>=8.0
+flask-mail>=0.10.0
