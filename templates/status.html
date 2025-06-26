@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Order Status #{{ order.invoice_no }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <h2 class="fw-bold">Track Your Order</h2>
+    <p class="text-muted">Invoice #{{ order.invoice_no }}</p>
+  </div>
+
+  <!-- Modern horizontal stepper -->
+  <ul class="d-flex stepper mb-5">
+    {% for m in milestones %}
+    <li class="step {% if not loop.last %}completed{% endif %}">
+      <div class="circle">
+        {% if loop.first %}
+          <i class="bi bi-receipt"></i>
+        {% elif 'on the way' in m.milestone|lower %}
+          <i class="bi bi-truck"></i>
+        {% else %}
+          <i class="bi bi-check2-circle"></i>
+        {% endif %}
+      </div>
+      <div class="label">
+        {{ m.milestone }}<br>
+        <small class="text-muted">{{ m.created_at.strftime("%b %d, %I:%M %p") }}</small>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <!-- Order info card -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <h5 class="card-title">Order #{{ order.order_id }}</h5>
+      {% if order.notes %}
+      <p class="card-text">{{ order.notes }}</p>
+      {% endif %}
+      <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href="{{ url_for('download_pdf', order_id=order.order_id) }}"
+           class="btn btn-outline-primary me-md-2">
+          <i class="bi bi-file-earmark-text"></i> PDF
+        </a>
+        <a href="{{ url_for('download_qr', order_id=order.order_id) }}"
+           class="btn btn-outline-primary">
+          <i class="bi bi-qr-code"></i> QR
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

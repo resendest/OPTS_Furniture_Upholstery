@@ -6,6 +6,8 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Table, TableStyle
 from reportlab.lib import colors
 
+
+
 from backend.db import execute
 from backend.qr_utils import generate_order_qr
 
@@ -223,4 +225,4 @@ def create_order(
         )
     )
 
-    return {"order_id": order_id, "qr": qr_url}
+    return {"order_id": order_id, "invoice_no": invoice_no, "qr": qr_url, "customer_id": customer_id}
