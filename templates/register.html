@@ -1,30 +1,37 @@
 {% extends "base.html" %}
-{% block title %}Register &mdash; Lousso Designs{% endblock %}
+{% block title %}Create an Account{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-md-6 col-lg-5">
-    <div class="card shadow-sm">
-      <div class="card-header text-center py-3">
-        <h2>Complete Registration</h2>
-        <small class="text-muted">for {{ email }}</small>
+    
+        
+        {% if email %}
+          <small class="text-muted">for {{ email }}</small>
+        {% endif %}
       </div>
       <div class="card-body p-4">
-        <form method="POST">
-          <div class="mb-3">
-            <label for="password">Password</label>
-            <input id="password" name="password" type="password"
-                   class="form-control" required minlength="8"/>
+        {% if info_message %}
+          <div class="alert alert-info text-center">
+            {{ info_message }}
           </div>
-          <div class="mb-3">
-            <label for="confirm_password">Confirm Password</label>
-            <input id="confirm_password" name="confirm_password"
-                   type="password" class="form-control"
-                   required minlength="8"/>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">
-            Register
-          </button>
-        </form>
+        {% elif email %}
+          <form method="POST">
+            <div class="mb-3">
+              <label for="password">Password</label>
+              <input id="password" name="password" type="password"
+                     class="form-control" required minlength="8"/>
+            </div>
+            <div class="mb-3">
+              <label for="confirm_password">Confirm Password</label>
+              <input id="confirm_password" name="confirm_password"
+                     type="password" class="form-control"
+                     required minlength="8"/>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+              Register
+            </button>
+          </form>
+        {% endif %}
       </div>
       <div class="card-footer text-center py-2">
         <a href="{{ url_for('login') }}">Already have an account? Log in</a>

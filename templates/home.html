@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Welcome to Lousso Design's Order Tracker{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <p class="lead mb-4">
+    The place to track your custom furniture orders!<br>
+    <br>
+    <a href="{{ url_for('create_order_page') }}" class="btn btn-primary btn-lg mt-3">Create a New Order</a>
+  </p>
+  <hr style="margin:2rem 0;">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <h3>How It Works</h3>
+      <ol class="text-start mx-auto" style="max-width: 500px;">
+        <li>Place a new order using the <b>Create New Order</b> button.</li>
+        <li>The client will receive a confirmation email with a link to register their account.</li>
+        <li>Clients can log in to track their order status.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+{% endblock %}

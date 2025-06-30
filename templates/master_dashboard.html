@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Master Dashboard — All Orders{% endblock %}
+{% block content %}
+<h1>All Orders</h1>
+
+<div class="mb-3">
+  <input
+    type="text"
+    id="orderSearch"
+    class="form-control"
+    placeholder="Search orders by any field…"
+    onkeyup="filterOrders()"
+    style="max-width: 350px;"
+  />
+</div>
+
+<!-- Filter dropdowns -->
+<div class="row mb-3">
+  <div class="col">
+    <select id="customerFilter" class="form-select" onchange="filterOrders()">
+      <option value="">All Customers</option>
+      {% for name in orders | map(attribute='customer_name') | unique | sort %}
+        <option value="{{ name }}">{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col">
+    <select id="statusFilter" class="form-select" onchange="filterOrders()">
+      <option value="">All Statuses</option>
+      {% for status in orders | map(attribute='status') | unique | sort %}
+        {% if status %}
+        <option value="{{ status }}">{{ status }}</option>
+        {% endif %}
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col">
+    <select id="dueDateFilter" class="form-select" onchange="filterOrders()">
+      <option value="">All Due Dates</option>
+      {% for due in orders | map(attribute='due_date') | unique | sort %}
+        {% if due %}
+        <option value="{{ due }}">{{ due }}</option>
+        {% endif %}
+      {% endfor %}
+    </select>
+  </div>
+</div>
+
+<table class="table table-striped" id="ordersTable">
+  <thead>
+    <tr>
+      <th>Order #</th>
+      <th>Invoice #</th>
+      <th>Customer</th>
+      <th>Email</th>
+      <th>Due Date</th>
+      <th>Status</th>
+      <th>Lousso PDF</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for o in orders %}
+    <tr>
+      <td>{{ o.order_id }}</td>
+      <td>{{ o.invoice_no }}</td>
+      <td>{{ o.customer_name or '' }}</td>
+      <td>{{ o.customer_email or '' }}</td>
+      <td>{{ o.due_date }}</td>
+      <td>{{ o.status or '' }}</td>
+      <td>
+        {% if o.lousso_pdf_path %}
+          <a href="{{ o.lousso_pdf_path }}" target="_blank">PDF</a>
+        {% else %}
+          <span class="text-muted">N/A</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+function filterOrders() {
+  const searchInput = document.getElementById('orderSearch').value.toLowerCase();
+  const customerVal = document.getElementById('customerFilter').value;
+  const statusVal = document.getElementById('statusFilter').value;
+  const dueDateVal = document.getElementById('dueDateFilter').value;
+  const table = document.getElementById('ordersTable');
+  const trs = table.getElementsByTagName('tr');
+  for (let i = 1; i < trs.length; i++) { // skip header row
+    const tds = trs[i].getElementsByTagName('td');
+    let show = true;
+
+    // Search filter
+    if (searchInput) {
+      let found = false;
+      for (let j = 0; j < tds.length; j++) {
+        if (tds[j].textContent.toLowerCase().indexOf(searchInput) > -1) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) show = false;
+    }
+
+    // Customer filter (fix: use tds[2])
+    if (customerVal && tds[2].textContent !== customerVal) show = false;
+
+    // Status filter
+    if (statusVal && tds[5].textContent !== statusVal) show = false;
+
+    // Due date filter
+    if (dueDateVal && tds[4].textContent !== dueDateVal) show = false;
+
+    trs[i].style.display = show ? '' : 'none';
+  }
+}
+</script>
+{% endblock %}

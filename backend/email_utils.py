@@ -30,7 +30,11 @@ def send_registration_email(user_id: int, to_addr: str, token: str, order_id: in
         subject="Complete Your Registration",
         recipients=[to_addr],
     )
-    link = f"{current_app.config['BASE_URL']}/register?token={token}"
+    link = (
+    f"{current_app.config['BASE_URL']}"
+    f"/register?token={token}&order_id={order_id}"
+    )
+    msg.subject = "Complete Your Registration"
     msg.body = f"Hi there!\n\nClick here to finish setting up your account:\n{link}"
     try:
         mail.send(msg)

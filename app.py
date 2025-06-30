@@ -6,7 +6,7 @@ from flask import (
     Flask, request, render_template,
     redirect, url_for, flash,
     send_from_directory, current_app,
-    session
+    session, g
 )
 from dotenv import load_dotenv
 
@@ -32,8 +32,12 @@ BASE_URL = os.getenv("BASE_URL", "http://localhost:5000").rstrip("/")
 app.register_blueprint(shop_bp)
 
 
-@app.route("/", methods=["GET", "POST"])
-def index():
+@app.route("/", methods=["GET"])
+def home():
+    return render_template("home.html", current_year=datetime.now().year)
+
+@app.route("/create_order", methods=["GET", "POST"])
+def create_order_page():
     if request.method == "POST":
         app.logger.debug("▶▶▶ FORM DATA: %s", dict(request.form))
 
@@ -43,24 +47,24 @@ def index():
         phone = request.form.get("customer_phone", "").strip()
         if not all([name, email, phone]):
             flash("Name, email, and phone are required.", "error")
-            return redirect(url_for("index"))
+            return redirect(url_for("create_order_page"))
 
         # ─── Product codes ─────────────────────────────────
-        raw_codes = request.form.get("product_codes", "").splitlines()
+        raw_codes = (request.form.get("product_codes") or "").splitlines()
         product_codes = [c.strip() for c in raw_codes if c.strip()]
         if not product_codes:
             flash("Enter at least one product code.", "error")
-            return redirect(url_for("index"))
+            return redirect(url_for("create_order_page"))
 
         invoice_no = request.form.get("invoice_no", "")
         if not invoice_no:
             flash("Invoice Number is required.", "error")
-            return redirect(url_for("index"))
+            return redirect(url_for("create_order_page"))
 
         milestone_list = request.form.getlist("milestone_list")
         if not milestone_list:
             flash("Select at least one milestone.", "error")
-            return redirect(url_for("index"))
+            return redirect(url_for("create_order_page"))
 
         due_date = request.form.get("due_date") or None
         notes    = request.form.get("notes")    or None
@@ -116,11 +120,11 @@ def index():
         except Exception as e:
             app.logger.exception("Error creating order")
             flash(f"Error creating order: {e}", "error")
-            return redirect(url_for("index"))
+            return redirect(url_for("create_order_page"))
 
         flash(f"Order #{info['order_id']} created successfully!", "success")
 
-                # ————— Generate & persist a one-time registration token —————
+        # ————— Generate & persist a one-time registration token —————
         customer_id = info["customer_id"]
         token = secrets.token_urlsafe(16)
         # store it on the customer record
@@ -144,7 +148,7 @@ def index():
 
         # ————— Redirect to order confirmation page —————
         return redirect(url_for("order_created", order_id=info["order_id"]))
-
+    # For GET, show the order form
     return render_template("index.html", current_year=datetime.now().year)
 
 @app.route("/email-config")
@@ -182,7 +186,7 @@ def order_created(order_id):
     )
     if not rows:
         flash(f"Order #{order_id} not found.", "error")
-        return redirect(url_for("index"))
+        return redirect(url_for("home"))  # changed from "index"
 
     order = rows[0]
     return render_template(
@@ -202,15 +206,19 @@ def register():
     token = request.args.get("token", "")
     order_id = request.args.get("order_id", type=int)
     if not token or not order_id:
-        flash("Invalid registration link.", "danger")
-        return redirect(url_for("index"))
+        # Show info page if accessed directly (no token/order_id)
+        return render_template(
+            "register.html",
+            email=None,
+            info_message="To register, please use the link sent to your email after placing an order."
+        )
     rows = execute(
         "SELECT customer_id, email FROM customers WHERE register_token = %s",
         (token,)
     )
     if not rows:
         flash("Invalid or expired registration link.", "danger")
-        return redirect(url_for("index"))
+        return redirect(url_for("home"))  # changed from "index"
     cust = rows[0]
 
     if request.method == "POST":
@@ -237,7 +245,7 @@ def register():
         # now send directly to the status page
         return redirect(url_for("order_status", order_id=order_id))
 
-    return render_template("register.html", email=cust["email"])
+    return render_template("register.html", email=cust["email"], info_message=None)
 
 
 # ————— Customer login & logout —————
@@ -247,20 +255,25 @@ def login():
         email = request.form["email"].strip()
         pw    = request.form["password"]
         rows = execute(
-            "SELECT customer_id, password_hash FROM customers WHERE email = %s",
+            "SELECT customer_id, password_hash, is_staff FROM customers WHERE email = %s",
             (email,)
         )
-        if rows and check_password_hash(rows[0]["password_hash"], pw):
+        if rows and rows[0]["password_hash"] and check_password_hash(rows[0]["password_hash"], pw):
             session["customer_id"] = rows[0]["customer_id"]
-            return redirect(url_for("client_dashboard"))
+            session["is_staff"] = bool(rows[0].get("is_staff", False))
+            if session["is_staff"]:
+                return redirect(url_for("portal"))
+            else:
+                return redirect(url_for("client_dashboard"))
         flash("Invalid email or password.", "danger")
     return render_template("login.html")
 
 @app.route("/logout")
 def logout():
     session.pop("customer_id", None)
+    session.pop("is_staff", None)
     flash("You have been logged out.", "info")
-    return redirect(url_for("index"))
+    return redirect(url_for("home"))
 
 
 # ————— Customer portal (their orders only) —————
@@ -272,20 +285,26 @@ def client_dashboard():
     orders = execute(
         "SELECT order_id, invoice_no, due_date, notes "
         "FROM orders WHERE customer_id=%s "
-        "ORDER BY order_date DESC",
+        "ORDER BY order_id DESC",  # changed from order_date
         (cid,)
     ) or []
     return render_template("client_dashboard.html", orders=orders)
 
 @app.route("/order/<int:order_id>")
 def view_order(order_id):
-    # 1) Look up the order and ensure it belongs to the logged-in customer
     cid = session.get("customer_id")
     if not cid:
         return redirect(url_for("login"))
 
+    # Join orders with customers to get all necessary info
     rows = execute(
-        "SELECT * FROM orders WHERE order_id = %s AND customer_id = %s",
+        """
+        SELECT o.order_id, o.invoice_no, o.created_at, o.due_date, o.notes, o.status,
+               c.name AS customer_name, c.email AS customer_email
+        FROM orders o
+        JOIN customers c ON o.customer_id = c.customer_id
+        WHERE o.order_id = %s AND o.customer_id = %s
+        """,
         (order_id, cid)
     )
     if not rows:
@@ -293,7 +312,8 @@ def view_order(order_id):
         return redirect(url_for("client_dashboard"))
 
     order = rows[0]
-    # 2) (Optional) load milestones or other details here…
+    # Map order_id to id for template compatibility
+    order["id"] = order["order_id"]
 
     return render_template("order_detail.html", order=order)
 
@@ -329,14 +349,90 @@ def order_status(order_id):
 
 @app.route("/portal")
 def portal():
-    # temporary stub until you build the real dashboard
-    return "<h1>Admin Dashboard Coming Soon</h1>", 200
+    if not session.get("is_staff"):
+        flash("Staff login required.", "danger")
+        return redirect(url_for("login"))
+    # Join orders with customers to get name and email
+    orders = execute(
+        """
+        SELECT o.*, c.name AS customer_name, c.email AS customer_email
+        FROM orders o
+        JOIN customers c ON o.customer_id = c.customer_id
+        ORDER BY o.order_id DESC
+        """
+    ) or []
+    milestone_counts = {}
+    if orders:
+        order_ids = [o["order_id"] for o in orders]
+        rows = execute(
+            "SELECT milestone_name, COUNT(*) AS count "
+            "FROM order_milestones WHERE order_id IN %s "
+            "GROUP BY milestone_name",
+            (tuple(order_ids),)
+        ) or []
+        for row in rows:
+            milestone_counts[row["milestone_name"]] = row["count"]
+    return render_template("master_dashboard.html", orders=orders, milestone_counts=milestone_counts)
 
+@app.route("/order/<int:order_id>/edit", methods=["POST"])
+def edit_order(order_id):
+    if not session.get("is_staff"):
+        flash("Unauthorized", "danger")
+        return redirect(url_for("view_order", order_id=order_id))
+    new_status = request.form.get("status")
+    execute(
+        "UPDATE orders SET status=%s WHERE order_id=%s",
+        (new_status, order_id)
+    )
+    flash("Order updated.", "success")
+    return redirect(url_for("view_order", order_id=order_id))
 
+@app.route("/add_staff", methods=["GET", "POST"])
+def add_staff():
+    # Only allow current staff to add new staff
+    if not session.get("is_staff"):
+        flash("Unauthorized", "danger")
+        return redirect(url_for("login"))
+    if request.method == "POST":
+        name = request.form["name"]
+        email = request.form["email"]
+        password = request.form["password"]
+        password_hash = generate_password_hash(password)
+        # Insert new staff user
+        execute(
+            "INSERT INTO customers (name, email, password_hash, is_staff) VALUES (%s, %s, %s, TRUE)",
+            (name, email, password_hash)
+        )
+        flash("Staff user added!", "success")
+        return redirect(url_for("portal"))
+    return render_template("add_staff.html")
+
+@app.route("/scan/<int:order_id>", methods=["GET", "POST"])
+def scan(order_id):
+    # ... your authentication logic ...
+    milestones = execute(
+        "SELECT milestone_id, milestone_name, stage_number, status, is_client_action, is_approved "
+        "FROM order_milestones WHERE order_id = %s ORDER BY stage_number",
+        (order_id,)
+    ) or []
+    return render_template(
+        "scan.html",
+        order_id=order_id,
+        milestones=milestones
+    )
+
+@app.before_request
+def load_customer():
+    g.customer_name = None
+    cid = session.get("customer_id")
+    if cid:
+        rows = execute("SELECT name FROM customers WHERE customer_id=%s", (cid,))
+        if rows:
+            g.customer_name = rows[0]["name"]
+
+@app.context_processor
+def inject_customer_name():
+    return {"customer_name": getattr(g, "customer_name", None)}
 
 if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", 5000)),
-        debug=True
-    )
+    app.run(debug=True)

@@ -112,18 +112,23 @@
   <!-- Modern Navbar -->
   <nav class="navbar-modern">
     <div class="container">
-      <a href="{{ url_for('index') }}">
+      <a href="{{ url_for('home') }}">
         <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Lousso Designs Logo" class="logo"/>
       </a>
       <div class="nav">
-        <a class="nav-link{% if request.endpoint == 'index' %} active{% endif %}" href="{{ url_for('index') }}">Home</a>
-        {% if session.get('customer_id') %}
+        <a class="nav-link{% if request.endpoint == 'home' %} active{% endif %}" href="{{ url_for('home') }}">Home</a>
+        <a class="nav-link{% if request.endpoint == 'create_order_page' %} active{% endif %}" href="{{ url_for('create_order_page') }}">Create New Order</a>
+        <a class="nav-link{% if request.endpoint == 'portal' %} active{% endif %}" href="{{ url_for('portal') }}">Master Dashboard</a>
+        {% if customer_name %}
           <a class="nav-link{% if request.endpoint == 'client_dashboard' %} active{% endif %}" href="{{ url_for('client_dashboard') }}">My Orders</a>
-          <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+          <span class="nav-link" style="pointer-events:none;opacity:0.8;">Welcome, {{ customer_name }}</span>
+          <a class="nav-link cta" href="{{ url_for('logout') }}">Log Out</a>
         {% else %}
           <a class="nav-link{% if request.endpoint == 'login' %} active{% endif %}" href="{{ url_for('login') }}">Login</a>
           <a class="nav-link{% if request.endpoint == 'register' %} active{% endif %}" href="{{ url_for('register') }}">Register</a>
-          <a class="nav-link cta" href="{{ url_for('index') }}#create-order">Create New Order</a>
+        {% endif %}
+        {% if session.is_staff %}
+          <a class="nav-link" href="{{ url_for('add_staff') }}">Add Staff</a>
         {% endif %}
       </div>
     </div>
@@ -141,7 +146,7 @@
 
   <!-- Footer -->
   <footer>
-    &copy; {{ current_year if current_year is defined else 2025 }} Lousso Designs
+    {{ current_year if current_year is defined else 2025 }} Lousso Designs
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
 </body>

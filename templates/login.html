@@ -1,32 +1,81 @@
 {% extends "base.html" %}
-{% block title %}Login &mdash; Lousso Designs{% endblock %}
+{% block title %}Login {% endblock %}
+{% block extra_head %}
+<style>
+  .login-card {
+    max-width: 420px;
+    margin: 3.5rem auto 2rem auto;
+    border-radius: 1.2rem;
+    box-shadow: 0 6px 32px rgba(60,80,180,0.10);
+    background: #fff;
+  }
+  .login-card .card-header {
+    border-radius: 1.2rem 1.2rem 0 0;
+    background: #f7f9fb;
+    border-bottom: none;
+  }
+  .login-card .card-body {
+    padding: 2.2rem 2.2rem 1.5rem 2.2rem;
+  }
+  .login-card label {
+    font-size: 1.13rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: #111;
+  }
+  .login-card .form-control {
+    font-size: 1.13rem;
+    padding: 1rem 1.1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.2rem;
+  }
+  .login-card button[type="submit"] {
+    font-size: 1.15rem;
+    padding: 0.9rem 0;
+    border-radius: 0.5rem;
+    font-weight: 700;
+  }
+  .login-card .card-footer {
+    background: none;
+    border-top: none;
+    font-size: 1.02rem;
+    border-radius: 0 0 1.2rem 1.2rem;
+  }
+  @media (max-width: 600px) {
+    .login-card {
+      max-width: 98vw;
+      margin: 1.2rem auto;
+    }
+    .login-card .card-body {
+      padding: 1.2rem 0.7rem 1rem 0.7rem;
+    }
+  }
+</style>
+{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6 col-lg-5">
-    <div class="card shadow-sm">
-      <div class="card-header text-center py-3">
-        <h2>Client Login</h2>
-      </div>
-      <div class="card-body p-4">
-        <form method="POST" novalidate>
-          <div class="mb-3">
-            <label for="email">Email</label>
-            <input id="email" name="email" type="email"
-                   class="form-control" required/>
-          </div>
-          <div class="mb-3">
-            <label for="password">Password</label>
-            <input id="password" name="password" type="password"
-                   class="form-control" required/>
-          </div>
-          <button type="submit" class="btn btn-primary w-100">
-            Log In
-          </button>
-        </form>
-      </div>
-      <div class="card-footer text-center py-2">
-        <a href="{{ url_for('register') }}">Need to register?</a>
-      </div>
+<div>
+  <div class="login-card card shadow-sm">
+    <div class="card-header text-center py-3">
+    </div>
+    <div class="card-body">
+      <form method="POST" novalidate>
+        <div class="mb-3">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email"
+                 class="form-control" required/>
+        </div>
+        <div class="mb-3">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password"
+                 class="form-control" required/>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">
+          Log In
+        </button>
+      </form>
+    </div>
+    <div class="card-footer text-center py-2">
+      <a href="{{ url_for('register') }}">Need to register?</a>
     </div>
   </div>
 </div>
