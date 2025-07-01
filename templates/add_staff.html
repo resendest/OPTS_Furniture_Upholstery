@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% block page_title %}{% endblock %}
 {% block content %}
-<h3>Add Staff User</h3>
+<h3>Add a Staff User</h3>
 <form method="POST">
   <div class="mb-3">
     <label>Name</label>
@@ -13,6 +14,10 @@
   <div class="mb-3">
     <label>Password</label>
     <input type="password" name="password" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Confirm Password</label>
+    <input type="password" name="confirm_password" class="form-control" required>
   </div>
   <button type="submit" class="btn btn-primary">Add Staff</button>
 </form>

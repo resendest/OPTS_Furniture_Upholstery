@@ -34,6 +34,12 @@ app.register_blueprint(shop_bp)
 
 @app.route("/", methods=["GET"])
 def home():
+    if session.get("customer_id"):
+        # Redirect staff to portal, others to client dashboard
+        if session.get("is_staff"):
+            return redirect(url_for("portal"))
+        else:
+            return redirect(url_for("client_dashboard"))
     return render_template("home.html", current_year=datetime.now().year)
 
 @app.route("/create_order", methods=["GET", "POST"])
@@ -397,12 +403,31 @@ def add_staff():
         name = request.form["name"]
         email = request.form["email"]
         password = request.form["password"]
+        confirm_password = request.form["confirm_password"]
+
+        if password != confirm_password:
+            flash("Passwords do not match.", "danger")
+            return render_template("add_staff.html")
+
         password_hash = generate_password_hash(password)
         # Insert new staff user
         execute(
             "INSERT INTO customers (name, email, password_hash, is_staff) VALUES (%s, %s, %s, TRUE)",
             (name, email, password_hash)
         )
+
+        # Send welcome email to staff
+        from backend.email_utils import mail, Message
+        msg = Message(
+            subject="Your Staff Account Has Been Created",
+            recipients=[email],
+            body=f"Hello {name},\n\nYour staff account for Lousso Designs has been created.\nYou can now log in at {app.config['BASE_URL']}/login\n\nIf you did not request this, please contact your administrator."
+        )
+        try:
+            mail.send(msg)
+        except Exception as e:
+            flash(f"Staff user added, but failed to send email: {e}", "warning")
+
         flash("Staff user added!", "success")
         return redirect(url_for("portal"))
     return render_template("add_staff.html")
