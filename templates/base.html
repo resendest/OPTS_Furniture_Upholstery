@@ -93,6 +93,10 @@
       background: none;
       margin-top: auto;
     }
+    .card-title, .card-body, .card, .mb-2, .mb-3, .btn, .badge, .notes {
+      writing-mode: horizontal-tb !important;
+      transform: none !important;
+    }
     @media (max-width: 600px) {
       .navbar-modern .container {
         flex-direction: column;
@@ -159,9 +163,12 @@
 
   <!-- Footer -->
   <footer>
-    {{ current_year if current_year is defined else 2025 }} Lousso Designs - All rights reserved. <br>
-    480 Neponset Street #12, Canton, MA 02021 <br>
-    (781) 224-0224 - info@loussodesigns.com
+    Lousso Designs - All rights reserved. <br>
+    Showroom: 148 Dorchester Ave., Boston, MA 02127 <br>
+    Workroom: 480 Neponset St. #12, Canton, MA 02021 <br>
+    (781) 224-0224 - info@loussodesigns.com <br>
+    <br>
+    Visit us at <a href="https://www.upholsteryboston.com" target="_blank">www.upholsteryboston.com</a>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
