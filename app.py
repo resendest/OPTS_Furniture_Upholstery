@@ -289,9 +289,9 @@ def client_dashboard():
     if not cid:
         return redirect(url_for("login"))
     orders = execute(
-        "SELECT order_id, invoice_no, due_date, notes "
+        "SELECT order_id, invoice_no, due_date, notes, status, client_pdf_path "
         "FROM orders WHERE customer_id=%s "
-        "ORDER BY order_id DESC",  # changed from order_date
+        "ORDER BY order_id DESC",
         (cid,)
     ) or []
     return render_template("client_dashboard.html", orders=orders)
@@ -445,6 +445,16 @@ def scan(order_id):
         order_id=order_id,
         milestones=milestones
     )
+
+@app.route("/order/<int:order_id>/delete", methods=["POST"])
+def delete_order(order_id):
+    if not session.get("is_staff"):
+        flash("Unauthorized", "danger")
+        return redirect(url_for("home"))
+    # Optionally: check if order exists
+    execute("DELETE FROM orders WHERE order_id=%s", (order_id,))
+    flash(f"Order #{order_id} has been deleted. This action cannot be reversed.", "success")
+    return redirect(url_for("portal"))
 
 @app.before_request
 def load_customer():

@@ -119,32 +119,27 @@
       <a href="{{ url_for('home') }}">
         <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Lousso Designs Logo" class="logo"/>
       </a>
-      <div class="d-flex flex-grow-1 justify-content-end align-items-start">
-        <div class="d-flex flex-column align-items-end ms-auto">
-          <!-- Main nav links (top row, right aligned) -->
-          <div class="d-flex align-items-center flex-wrap justify-content-end" style="gap: 1.5rem; font-size: 1.08rem;">
-            {% if not customer_name %}
-              <a class="nav-link{% if request.endpoint == 'home' %} active{% endif %}" href="{{ url_for('home') }}">Home</a>
-              <a class="nav-link{% if request.endpoint == 'login' %} active{% endif %}" href="{{ url_for('login') }}" style="font-size:0.98rem;">Login</a>
-              <a class="nav-link{% if request.endpoint == 'register' %} active{% endif %}" href="{{ url_for('register') }}" style="font-size:0.98rem;">Register</a>
-            {% endif %}
-            {% if session.is_staff %}
-              <a class="nav-link{% if request.endpoint == 'create_order_page' %} active{% endif %}" href="{{ url_for('create_order_page') }}">Create New Order</a>
-            {% endif %}
-            {% if customer_name %}
-              <a class="nav-link{% if request.endpoint == 'client_dashboard' %} active{% endif %}" href="{{ url_for('client_dashboard') }}">My Orders</a>
-            {% endif %}
-            {% if session.is_staff %}
-              <a class="nav-link{% if request.endpoint == 'portal' %} active{% endif %}" href="{{ url_for('portal') }}">Master Dashboard</a>
-              <a class="nav-link" href="{{ url_for('add_staff') }}">Add Staff</a>
-            {% endif %}
-          </div>
-          <!-- Auth/user links (bottom row, right aligned) -->
+      <div class="d-flex flex-grow-1 justify-content-end align-items-center">
+        <!-- Main nav links (all horizontal) -->
+        <div class="d-flex align-items-center flex-wrap ms-auto" style="gap: 1.5rem; font-size: 1.08rem;">
+          {% if not customer_name %}
+            <a class="nav-link{% if request.endpoint == 'home' %} active{% endif %}" href="{{ url_for('home') }}">Home</a>
+            <a class="nav-link{% if request.endpoint == 'login' %} active{% endif %}" href="{{ url_for('login') }}" style="font-size:0.98rem;">Login</a>
+            <a class="nav-link{% if request.endpoint == 'register' %} active{% endif %}" href="{{ url_for('register') }}" style="font-size:0.98rem;">Register</a>
+          {% endif %}
+          {% if session.is_staff %}
+            <a class="nav-link{% if request.endpoint == 'create_order_page' %} active{% endif %}" href="{{ url_for('create_order_page') }}">Create New Order</a>
+          {% endif %}
           {% if customer_name %}
-          <div class="d-flex align-items-center justify-content-end" style="gap: 0.8rem; margin-top: 1.1rem;">
+            <a class="nav-link{% if request.endpoint == 'client_dashboard' %} active{% endif %}" href="{{ url_for('client_dashboard') }}">My Orders</a>
+          {% endif %}
+          {% if session.is_staff %}
+            <a class="nav-link{% if request.endpoint == 'portal' %} active{% endif %}" href="{{ url_for('portal') }}">Master Dashboard</a>
+            <a class="nav-link" href="{{ url_for('add_staff') }}">Add Staff</a>
+          {% endif %}
+          {% if customer_name %}
             <span class="nav-link small" style="pointer-events:none;opacity:0.8; font-size:0.98rem;">Welcome, {{ customer_name }}</span>
             <a class="nav-link cta" href="{{ url_for('logout') }}" style="font-size:0.98rem;">Log Out</a>
-          </div>
           {% endif %}
         </div>
       </div>
