@@ -35,7 +35,13 @@ def send_registration_email(user_id: int, to_addr: str, token: str, order_id: in
     f"/register?token={token}&order_id={order_id}"
     )
     msg.subject = "Complete Your Registration"
-    msg.body = f"Hi there!\n\nYou have a new order with Lousso Designs! Your project can now be viewed in our Order Tracker!\n\nClick here to finish setting up your account:\n{link}"
+    msg.body = (
+        "Hi there!\n\n"
+        "You have a new order with Lousso Designs! Your project can now be viewed in our Order Tracker!\n\n"
+        f"Click here to finish setting up your account:\n{link}\n\n"
+        "If you already have an account with us, you can log in here:\n"
+        f"{current_app.config['BASE_URL']}/login"
+    )
     try:
         mail.send(msg)
         current_app.logger.info("Email sent OK")
