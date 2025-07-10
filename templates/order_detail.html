@@ -36,12 +36,13 @@
       <div class="d-flex gap-2">
         <button type="submit" id="saveBtn" class="btn btn-primary" style="border-radius: 4px; min-width: 120px;">Save Changes</button>
         <a href="{{ url_for('portal') }}" class="btn btn-primary" style="border-radius: 4px; min-width: 120px;">Back to Dashboard</a>
+        <!-- Move the delete form/button inside the flex container for horizontal alignment -->
+        <form id="deleteOrderForm" method="POST" action="{{ url_for('delete_order', order_id=order.id) }}" style="display:inline;">
+          <button type="submit" class="btn btn-danger text-white" style="border-radius: 4px; min-width: 120px;" onclick="return confirm('Are you sure you want to delete this order? This action cannot be reversed.');">
+            Delete Order
+          </button>
+        </form>
       </div>
-    </form>
-    <form id="deleteOrderForm" method="POST" action="{{ url_for('delete_order', order_id=order.id) }}" style="display:inline;">
-      <button type="submit" class="btn btn-danger text-white" style="border-radius: 4px; min-width: 120px;" onclick="return confirm('Are you sure you want to delete this order? This action cannot be reversed.');">
-        Delete Order
-      </button>
     </form>
     <script>
       const form = document.getElementById('editOrderForm');
