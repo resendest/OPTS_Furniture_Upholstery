@@ -291,7 +291,7 @@ def client_dashboard():
     orders = execute(
         "SELECT order_id, invoice_no, due_date, notes, status, client_pdf_path "
         "FROM orders WHERE customer_id=%s "
-        "ORDER BY order_id DESC",
+        "ORDER BY invoice_no DESC",  # Changed from order_id
         (cid,)
     ) or []
     return render_template("client_dashboard.html", orders=orders)
@@ -299,28 +299,41 @@ def client_dashboard():
 @app.route("/order/<int:order_id>")
 def view_order(order_id):
     cid = session.get("customer_id")
-    if not cid:
+    is_staff = session.get("is_staff")
+    # Allow staff to view any order, clients only their own
+    if not cid and not is_staff:
         return redirect(url_for("login"))
 
-    # Join orders with customers to get all necessary info
-    rows = execute(
-        """
-        SELECT o.order_id, o.invoice_no, o.created_at, o.due_date, o.notes, o.status,
-               c.name AS customer_name, c.email AS customer_email
-        FROM orders o
-        JOIN customers c ON o.customer_id = c.customer_id
-        WHERE o.order_id = %s AND o.customer_id = %s
-        """,
-        (order_id, cid)
-    )
+    if is_staff:
+        # Staff can view any order
+        rows = execute(
+            """
+            SELECT o.order_id, o.invoice_no, o.created_at, o.due_date, o.notes, o.status,
+                   c.name AS customer_name, c.email AS customer_email
+            FROM orders o
+            JOIN customers c ON o.customer_id = c.customer_id
+            WHERE o.order_id = %s
+            """,
+            (order_id,)
+        )
+    else:
+        # Clients can only view their own orders
+        rows = execute(
+            """
+            SELECT o.order_id, o.invoice_no, o.created_at, o.due_date, o.notes, o.status,
+                   c.name AS customer_name, c.email AS customer_email
+            FROM orders o
+            JOIN customers c ON o.customer_id = c.customer_id
+            WHERE o.order_id = %s AND o.customer_id = %s
+            """,
+            (order_id, cid)
+        )
     if not rows:
         flash(f"Order #{order_id} not found.", "danger")
-        return redirect(url_for("client_dashboard"))
+        return redirect(url_for("client_dashboard") if not is_staff else url_for("portal"))
 
     order = rows[0]
-    # Map order_id to id for template compatibility
     order["id"] = order["order_id"]
-
     return render_template("order_detail.html", order=order)
 
 @app.route("/status/<int:order_id>")
@@ -451,10 +464,31 @@ def delete_order(order_id):
     if not session.get("is_staff"):
         flash("Unauthorized", "danger")
         return redirect(url_for("home"))
-    # Optionally: check if order exists
+    # Delete from all child tables first
+    execute("DELETE FROM order_items WHERE order_id=%s", (order_id,))
+    execute("DELETE FROM order_specs WHERE order_id=%s", (order_id,))
+    # Add more deletes here if you have other related tables (e.g., order_milestones)
+    execute("DELETE FROM order_milestones WHERE order_id=%s", (order_id,))
+    # Then delete the order
     execute("DELETE FROM orders WHERE order_id=%s", (order_id,))
     flash(f"Order #{order_id} has been deleted. This action cannot be reversed.", "success")
     return redirect(url_for("portal"))
+
+@app.before_request
+def load_customer():
+    g.customer_name = None
+    cid = session.get("customer_id")
+    if cid:
+        rows = execute("SELECT name FROM customers WHERE customer_id=%s", (cid,))
+        if rows:
+            g.customer_name = rows[0]["name"]
+
+@app.context_processor
+def inject_customer_name():
+    return {"customer_name": getattr(g, "customer_name", None)}
+
+if __name__ == "__main__":
+    app.run(debug=True)
 
 @app.before_request
 def load_customer():

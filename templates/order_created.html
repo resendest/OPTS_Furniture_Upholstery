@@ -1,16 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Order {{ order.order_id }} Created{% endblock %}
+{% block title %}The order has been created!{% endblock %}
 
 {% block content %}
-  <h1>Order #{{ order.order_id }} Created</h1>
+ 
 
   <div style="margin-bottom: 1.5rem;">
     <p><strong>Customer ID:</strong> {{ order.customer_id }}</p>
     <p><strong>Invoice Number:</strong> {{ order.invoice_no }}</p>
-    {% if order.qr_path %}
-      <p><strong>QR Code Path:</strong> {{ order.qr_path }}</p>
-    {% endif %}
     {% if order.pdf_path %}
       <p><strong>PDF Path:</strong> {{ order.pdf_path }}</p>
     {% endif %}
@@ -19,7 +16,6 @@
  {# -------- Lousso Staff Work Order PDF -------- #}
   {% if order.lousso_pdf_path %}
     <div style="margin-bottom: 1rem;">
-      <h2>Internal Work Order (Lousso)</h2>
       <a
         href="{{ url_for('work_orders', filename=order.lousso_pdf_path | replace('static/work_orders/', '') ) }}"
         target="_blank"
@@ -54,7 +50,7 @@
         text-decoration: none;
       "
     >
-      Go to Scan Page
+      View Milestones
     </a>
   </p>
 {% endblock %}
