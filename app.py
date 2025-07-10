@@ -489,19 +489,3 @@ def inject_customer_name():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-@app.before_request
-def load_customer():
-    g.customer_name = None
-    cid = session.get("customer_id")
-    if cid:
-        rows = execute("SELECT name FROM customers WHERE customer_id=%s", (cid,))
-        if rows:
-            g.customer_name = rows[0]["name"]
-
-@app.context_processor
-def inject_customer_name():
-    return {"customer_name": getattr(g, "customer_name", None)}
-
-if __name__ == "__main__":
-    app.run(debug=True)
