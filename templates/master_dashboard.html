@@ -52,7 +52,6 @@
         <table class="table table-striped align-middle mb-0" id="ordersTable">
           <thead>
             <tr>
-              <th>Order #</th>
               <th>Invoice #</th>
               <th>Customer</th>
               <th>Due Date</th>
@@ -64,7 +63,6 @@
           <tbody>
             {% for o in orders %}
             <tr>
-              <td>{{ o.order_id }}</td>
               <td>{{ o.invoice_no }}</td>
               <td>{{ o.customer_name or '' }}</td>
               <td>{{ o.due_date }}</td>
@@ -97,7 +95,7 @@
     const dueDateVal = document.getElementById('dueDateFilter').value;
     const table = document.getElementById('ordersTable');
     const trs = table.getElementsByTagName('tr');
-    for (let i = 1; i < trs.length; i++) { // skip header row
+    for (let i = 1; i < trs.length; i++) { 
       const tds = trs[i].getElementsByTagName('td');
       let show = true;
 

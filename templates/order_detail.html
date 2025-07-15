@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block page_title %}Order #{{ order.id }}{% endblock %}
+{% block page_title %}Invoice #{{ order.invoice_no }}{% endblock %}
 
 {% block content %}
 <div class="mb-4">
@@ -8,10 +8,6 @@
   {% if session.is_staff %}
     <form id="editOrderForm" method="POST" action="{{ url_for('edit_order', order_id=order.id) }}">
       <table class="table table-bordered">
-        <tr>
-          <th>Order ID</th>
-          <td>{{ order.id }}</td>
-        </tr>
         <tr>
           <th>Customer</th>
           <td>{{ order.customer_name }}</td>
@@ -26,12 +22,13 @@
             <select name="status" class="form-control" id="statusSelect">
               <option value="Not Started" {% if order.status == "Not Started" %}selected{% endif %}>Not Started</option>
               <option value="In Progress" {% if order.status == "In Progress" %}selected{% endif %}>In Progress</option>
+              <option value="Quality Control" {% if order.status == "Quality Control" %}selected{% endif %}>Quality Control</option>
               <option value="Completed" {% if order.status == "Completed" %}selected{% endif %}>Completed</option>
-              <option value="Approved" {% if order.status == "Approved" %}selected{% endif %}>Approved</option>
+              <option value="Out for Delivery" {% if order.status == "Out for Delivery" %}selected{% endif %}>Out for Delivery</option>
             </select>
           </td>
         </tr>
-        <!-- Add more editable fields as needed -->
+        
       </table>
       <div class="d-flex gap-2">
         <button type="submit" id="saveBtn" class="btn btn-primary" style="border-radius: 4px; min-width: 120px;">Save Changes</button>
@@ -98,7 +95,7 @@
         <th>Status</th>
         <td>{{ order.status }}</td>
       </tr>
-      <!-- Add more fields as needed -->
+      
     </table>
     <a href="{{ url_for('client_dashboard') }}" class="btn btn-primary mt-3" style="border-radius: 4px;">Back to My Orders</a>
   {% endif %}
