@@ -3,152 +3,111 @@
 {% block title %}Order #{{ order_id }} Scan{% endblock %}
 
 {% block extra_head %}
-  <style>
-    .table-wrapper {
-      overflow-x: auto;
-      margin-top: 1.5rem;
-    }
-    .scan-form {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem 2rem;
-      align-items: flex-end;
-      margin-bottom: 2rem;
-      background: #f8f9fa;
-      padding: 1.5rem 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      max-width: 600px;
-    }
-    .scan-form-group {
-      flex: 1 1 220px;
-      min-width: 220px;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    .scan-form label {
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-    .scan-form select {
-      padding: 0.5rem;
-      font-size: 1rem;
-      border-radius: 4px;
-      border: 1px solid #ced4da;
-      min-width: 220px;
-      max-width: 100%;
-      box-sizing: border-box;
-    }
-    .scan-form button {
-      min-width: 120px;
-      height: 42px;
-      margin-top: 1.5rem;
-    }
-    @media (max-width: 600px) {
-      .scan-form {
-        flex-direction: column;
-        gap: 1rem;
-        padding: 1rem 0.5rem;
-      }
-      .scan-form-group {
-        min-width: 0;
-      }
-    }
-    .table th, .table td {
-      text-align: center;
-      vertical-align: middle;
-    }
-  </style>
+<style>
+  .scan-card {
+    max-width: 420px;
+    margin: 2.5rem auto;
+    background: #fff;
+    border-radius: 1.2rem;
+    box-shadow: 0 6px 32px rgba(60,80,180,0.10);
+    padding: 2.2rem 2.2rem 1.5rem 2.2rem;
+    text-align: center;
+  }
+  .scan-card h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2a4adf;
+    margin-bottom: 1.2rem;
+  }
+  .scan-card .current {
+    font-size: 1.18rem;
+    margin-bottom: 1.5rem;
+    color: #222;
+  }
+  .scan-card .form-select,
+  .scan-card .btn {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  .scan-card .btn {
+    min-width: 140px;
+    border-radius: 6px;
+  }
+  .scan-card .alert {
+    margin-top: 1rem;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-  <h1 class="mb-4">Order #{{ order_id }} Milestones</h1>
-
-  <form class="scan-form" onsubmit="submitMilestone(event)">
-    <div class="scan-form-group">
-      <label for="milestoneSelect">Set Milestone</label>
-      <select id="milestoneSelect" required>
-        <option value="" disabled selected>-- Choose milestone --</option>
-        {% for m in milestones %}
-          <option value="{{ m.milestone_id }}">{{ m.milestone_name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="scan-form-group">
-      <label for="statusSelect">Set Status</label>
-      <select id="statusSelect" required>
-        <option value="" disabled selected>-- Choose status --</option>
-        <option value="Not Started">Not Started</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Completed">Completed</option>
-        <option value="Approved">Approved</option>
-      </select>
-    </div>
-    <button type="submit" class="btn btn-primary" style="border-radius: 4px;">Submit</button>
-  </form>
-
-  <div class="table-wrapper">
-    <table class="table table-bordered table-striped">
-      <thead class="table-light">
-        <tr>
-          <th>Stage #</th>
-          <th>Milestone</th>
-          <th>Status</th>
-          <th>Client Action?</th>
-          <th>Approved?</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for m in milestones %}
-          <tr>
-            <td>{{ m.stage_number if m.stage_number is defined else loop.index }}</td>
-            <td>{{ m.milestone_name }}</td>
-            <td>{{ m.status or "Not Started" }}</td>
-            <td>{{ "Yes" if m.is_client_action else "No" }}</td>
-            <td>{{ "✓" if m.is_approved else "✗" }}</td>
-            <td>
-              {% if not m.is_approved %}
-                <button
-                  type="button"
-                  class="btn btn-outline-success btn-sm"
-                  onclick="updateMilestone('{{ m.milestone_id }}', '{{ m.milestone_name }}')"
-                >Mark as {{ m.milestone_name }}</button>
-              {% else %}
-                <em>Done</em>
-              {% endif %}
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+<div class="scan-card">
+  <h2>Order #{{ order_id }}</h2>
+  <div class="current">
+    {% set ns = namespace(next_milestone=None) %}
+    {% for m in milestones %}
+      {% if (m.is_approved == false or m.is_approved == 0) and not ns.next_milestone %}
+        {% set ns.next_milestone = m %}
+      {% endif %}
+    {% endfor %}
+    {% if ns.next_milestone %}
+      {% set idx = milestones.index(ns.next_milestone) %}
+      {% if idx > 0 %}
+        {% set current = milestones[idx-1] %}
+        This order is in <strong>{{ current.milestone_name }}</strong>
+      {% else %}
+        This order has <strong>not started</strong>
+      {% endif %}
+    {% else %}
+      <span class="text-success">All milestones completed!</span>
+    {% endif %}
   </div>
 
-  <script>
-    function submitMilestone(event) {
-      event.preventDefault();
-      const milestoneId = document.getElementById('milestoneSelect').value;
-      const status = document.getElementById('statusSelect').value;
-      if (!milestoneId || !status) return;
-      updateMilestone(milestoneId, status);
-    }
+  {% if ns.next_milestone %}
+    <form id="milestoneForm" onsubmit="submitMilestone(event)">
+      <input type="hidden" id="milestoneId" value="{{ ns.next_milestone.milestone_id }}">
+      <div class="mb-3">
+        <label for="statusSelect" class="form-label">Update to next milestone:</label>
+        <select id="statusSelect" class="form-select" required>
+          <option value="" disabled selected>-- Choose status --</option>
+          <option value="Started">Started</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    <div id="confirmation" class="alert alert-success d-none">Milestone updated!</div>
+  {% endif %}
+</div>
 
-    function updateMilestone(milestoneId, status) {
-      fetch("/scan/{{ order_id }}", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ milestone_id: milestoneId, status: status })
-      })
-      .then(function(response) {
-        return response.json();
-      })
-      .then(function(data) {
-        window.location.reload();
-      })
-      .catch(function(error) {
-        console.error("Error:", error);
-      });
+<pre>
+{% for m in milestones %}
+  {{ m.milestone_name }}: is_approved={{ m.is_approved }}
+{% endfor %}
+</pre>
+
+<script>
+function submitMilestone(event) {
+  event.preventDefault();
+  const milestoneId = document.getElementById('milestoneId').value;
+  const status = document.getElementById('statusSelect').value;
+  if (!milestoneId || !status) return;
+  fetch("{{ url_for('shop.scan_update', order_id=order_id) }}", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ milestone_id: milestoneId, status: status })
+  })
+  .then(response => response.json().then(data => ({status: response.status, body: data})))
+  .then(({status, body}) => {
+    if (status === 201 && body.message === "OK") {
+      document.getElementById('confirmation').classList.remove('d-none');
+      setTimeout(() => window.location.reload(), 1200);
+    } else {
+      alert(body.error || "Error updating milestone.");
     }
-  </script>
+  })
+  .catch(err => {
+    alert("Network or server error.");
+  });
+}
+</script>
 {% endblock %}

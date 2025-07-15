@@ -1,6 +1,10 @@
+import sys, os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 import os
 import secrets
 from datetime import datetime
+
 
 from flask import (
     Flask, request, render_template,
@@ -16,6 +20,7 @@ from backend.shop_routes import shop_bp
 from backend.email_utils import init_mail
 
 from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 
 # Load environment variables
 load_dotenv()
@@ -246,6 +251,7 @@ def register():
                 (pw_hash, datetime.utcnow(), cust["customer_id"])
             )
             session["customer_id"] = cust["customer_id"]
+            session["user_id"] = cust["customer_id"]  # or whatever your user ID field is
             flash("Registration complete! Welcome.", "success")
             return redirect(url_for("client_dashboard"))
         # now send directly to the status page
@@ -266,6 +272,7 @@ def login():
         )
         if rows and rows[0]["password_hash"] and check_password_hash(rows[0]["password_hash"], pw):
             session["customer_id"] = rows[0]["customer_id"]
+            session["user_id"] = rows[0]["customer_id"]  # or whatever your user ID field is
             session["is_staff"] = bool(rows[0].get("is_staff", False))
             if session["is_staff"]:
                 return redirect(url_for("portal"))
@@ -277,6 +284,7 @@ def login():
 @app.route("/logout")
 def logout():
     session.pop("customer_id", None)
+    session.pop("user_id", None)
     session.pop("is_staff", None)
     flash("You have been logged out.", "info")
     return redirect(url_for("home"))
@@ -445,9 +453,21 @@ def add_staff():
         return redirect(url_for("portal"))
     return render_template("add_staff.html")
 
-@app.route("/scan/<int:order_id>", methods=["GET", "POST"])
-def scan(order_id):
-    # ... your authentication logic ...
+from flask import redirect, url_for, session, flash
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please log in to access this page.", "warning")
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route("/scan/<int:order_id>", methods=["GET"])
+@login_required
+def scan_view(order_id):
     milestones = execute(
         "SELECT milestone_id, milestone_name, stage_number, status, is_client_action, is_approved "
         "FROM order_milestones WHERE order_id = %s ORDER BY stage_number",
