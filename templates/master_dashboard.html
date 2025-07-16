@@ -52,6 +52,7 @@
         <table class="table table-striped align-middle mb-0" id="ordersTable">
           <thead>
             <tr>
+              <th>Order ID</th>
               <th>Invoice #</th>
               <th>Customer</th>
               <th>Due Date</th>
@@ -63,6 +64,7 @@
           <tbody>
             {% for o in orders %}
             <tr>
+             <td>{{ o.order_id }}</td>
               <td>{{ o.invoice_no }}</td>
               <td>{{ o.customer_name or '' }}</td>
               <td>{{ o.due_date }}</td>
@@ -90,14 +92,14 @@
   <script>
   function filterOrders() {
     const searchInput = document.getElementById('orderSearch').value.toLowerCase();
-    const customerVal = document.getElementById('customerFilter').value;
-    const statusVal = document.getElementById('statusFilter').value;
-    const dueDateVal = document.getElementById('dueDateFilter').value;
-    const table = document.getElementById('ordersTable');
-    const trs = table.getElementsByTagName('tr');
-    for (let i = 1; i < trs.length; i++) { 
+    const customerVal  = document.getElementById('customerFilter').value;
+    const statusVal    = document.getElementById('statusFilter').value;
+    const dueDateVal   = document.getElementById('dueDateFilter').value;
+    const table        = document.getElementById('ordersTable');
+    const trs          = table.getElementsByTagName('tr');
+    for (let i = 1; i < trs.length; i++) {
       const tds = trs[i].getElementsByTagName('td');
-      let show = true;
+      let show  = true;
 
       // Search filter
       if (searchInput) {
@@ -111,14 +113,14 @@
         if (!found) show = false;
       }
 
-      // Customer filter (fix: use tds[2])
-      if (customerVal && tds[2].textContent !== customerVal) show = false;
+      // Customer filter (col 2)
+      if (customerVal && tds[2].textContent.trim() !== customerVal) show = false;
 
-      // Status filter
-      if (statusVal && tds[5].textContent !== statusVal) show = false;
+      // Status filter (col 4)
+      if (statusVal && tds[4].textContent.trim() !== statusVal) show = false;
 
-      // Due date filter
-      if (dueDateVal && tds[4].textContent !== dueDateVal) show = false;
+      // Due date filter (col 3)
+      if (dueDateVal && tds[3].textContent.trim() !== dueDateVal) show = false;
 
       trs[i].style.display = show ? '' : 'none';
     }

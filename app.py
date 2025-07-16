@@ -507,5 +507,22 @@ def load_customer():
 def inject_customer_name():
     return {"customer_name": getattr(g, "customer_name", None)}
 
+# Client-provided milestone choices
+# This list can be extended with new milestones as needed
+MILESTONE_CHOICES = [
+  "Custom Material Preparation",
+  "Project Approved, Production Kicking Off",
+  "In Production",
+  "Awaiting Quality Check",
+  "Passed Quality Check",
+  "Out for Delivery",
+  # …any new ones…
+]
+
+# inject into ALL templates
+@app.context_processor
+def inject_milestone_choices():
+    return dict(milestone_choices=MILESTONE_CHOICES)
+
 if __name__ == "__main__":
     app.run(debug=True)

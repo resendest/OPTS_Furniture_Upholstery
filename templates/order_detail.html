@@ -19,7 +19,7 @@
         <tr>
           <th>Status</th>
           <td>
-            <select name="status" class="form-control" id="statusSelect">
+            <select id="statusSelect" name="status" class="form-control">
               <option value="Not Started" {% if order.status == "Not Started" %}selected{% endif %}>Not Started</option>
               <option value="In Progress" {% if order.status == "In Progress" %}selected{% endif %}>In Progress</option>
               <option value="Quality Control" {% if order.status == "Quality Control" %}selected{% endif %}>Quality Control</option>
@@ -30,53 +30,7 @@
         </tr>
         
       </table>
-      <div class="d-flex gap-2">
-        <button type="submit" id="saveBtn" class="btn btn-primary" style="border-radius: 4px; min-width: 120px;">Save Changes</button>
-        <a href="{{ url_for('portal') }}" class="btn btn-primary" style="border-radius: 4px; min-width: 120px;">Back to Dashboard</a>
-        <!-- Move the delete form/button inside the flex container for horizontal alignment -->
-        <form id="deleteOrderForm" method="POST" action="{{ url_for('delete_order', order_id=order.id) }}" style="display:inline;">
-          <button type="submit" class="btn btn-danger text-white" style="border-radius: 4px; min-width: 120px;" onclick="return confirm('Are you sure you want to delete this order? This action cannot be reversed.');">
-            Delete Order
-          </button>
-        </form>
-      </div>
     </form>
-    <script>
-      const form = document.getElementById('editOrderForm');
-      const saveBtn = document.getElementById('saveBtn');
-      const statusSelect = document.getElementById('statusSelect');
-      let initialStatus = statusSelect.value;
-      let isDirty = false;
-
-      function setButtonState() {
-        if (isDirty) {
-          saveBtn.classList.remove('btn-primary', 'btn-secondary');
-          saveBtn.classList.add('btn-success');
-          saveBtn.disabled = false;
-        } else {
-          saveBtn.classList.remove('btn-success', 'btn-secondary');
-          saveBtn.classList.add('btn-primary');
-          saveBtn.disabled = false;
-        }
-      }
-
-      statusSelect.addEventListener('change', function() {
-        isDirty = statusSelect.value !== initialStatus;
-        setButtonState();
-      });
-
-      form.addEventListener('submit', function(e) {
-        saveBtn.disabled = true;
-        saveBtn.classList.remove('btn-success', 'btn-primary');
-        saveBtn.classList.add('btn-secondary');
-        setTimeout(function() {
-          alert("All changes have been saved");
-        }, 100); // Show after submit, adjust as needed
-      });
-
-      // On page load, ensure correct button state
-      setButtonState();
-    </script>
   {% else %}
     <table class="table table-bordered">
       <tr>
@@ -100,4 +54,50 @@
     <a href="{{ url_for('client_dashboard') }}" class="btn btn-primary mt-3" style="border-radius: 4px;">Back to My Orders</a>
   {% endif %}
 </div>
+
+{% if milestones %}
+  <h4 class="mt-4">Milestone History</h4>
+  <table class="table table-bordered">
+    <thead>
+      <tr><th>Milestone</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {% for m in milestones %}
+        <tr>
+          <td>{{ m.milestone_name }}</td>
+          <td>{{ m.status }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+
+{% if session.is_staff %}
+  <div class="d-flex gap-2 mt-3">
+    <!-- Save changes button (re-post the edit form) -->
+    <button form="editOrderForm" type="submit"
+            id="saveBtn" class="btn btn-primary" style="min-width:120px">
+      Save Changes
+    </button>
+
+    <!-- Back to Dashboard -->
+    <a href="{{ url_for('portal') }}"
+       class="btn btn-secondary" style="min-width:120px">
+      Back to Dashboard
+    </a>
+
+    <!-- Delete Order -->
+    <form id="deleteOrderForm"
+          method="POST"
+          action="{{ url_for('delete_order', order_id=order.id) }}"
+          onsubmit="return confirm('Are you sure?');"
+          style="display:inline">
+      <button type="submit"
+              class="btn btn-danger text-white"
+              style="min-width:120px">
+        Delete Order
+      </button>
+    </form>
+  </div>
+{% endif %}
 {% endblock %}

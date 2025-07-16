@@ -2,50 +2,15 @@
 
 {% block title %}Order #{{ order_id }} Scan{% endblock %}
 
-{% block extra_head %}
-<style>
-  .scan-card {
-    max-width: 420px;
-    margin: 2.5rem auto;
-    background: #fff;
-    border-radius: 1.2rem;
-    box-shadow: 0 6px 32px rgba(60,80,180,0.10);
-    padding: 2.2rem 2.2rem 1.5rem 2.2rem;
-    text-align: center;
-  }
-  .scan-card h2 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #2a4adf;
-    margin-bottom: 1.2rem;
-  }
-  .scan-card .current {
-    font-size: 1.18rem;
-    margin-bottom: 1.5rem;
-    color: #222;
-  }
-  .scan-card .form-select,
-  .scan-card .btn {
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
-  }
-  .scan-card .btn {
-    min-width: 140px;
-    border-radius: 6px;
-  }
-  .scan-card .alert {
-    margin-top: 1rem;
-  }
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="scan-card">
-  <h2>Order #{{ order_id }}</h2>
+  
+  <p><strong>Invoice #:</strong> {{ invoice_no }}</p>    <!-- added invoice -->
+
   <div class="current">
     {% set ns = namespace(next_milestone=None) %}
     {% for m in milestones %}
-      {% if (m.is_approved == false or m.is_approved == 0) and not ns.next_milestone %}
+      {% if not m.is_approved and not ns.next_milestone %}
         {% set ns.next_milestone = m %}
       {% endif %}
     {% endfor %}
@@ -53,9 +18,9 @@
       {% set idx = milestones.index(ns.next_milestone) %}
       {% if idx > 0 %}
         {% set current = milestones[idx-1] %}
-        This order is in <strong>{{ current.milestone_name }}</strong>
+        Your order is in <strong>{{ current.milestone_name }}</strong>
       {% else %}
-        This order has <strong>not started</strong>
+        Your order has <strong>not started</strong>
       {% endif %}
     {% else %}
       <span class="text-success">All milestones completed!</span>
@@ -64,13 +29,15 @@
 
   {% if ns.next_milestone %}
     <form id="milestoneForm" onsubmit="submitMilestone(event)">
-      <input type="hidden" id="milestoneId" value="{{ ns.next_milestone.milestone_id }}">
       <div class="mb-3">
-        <label for="statusSelect" class="form-label">Update to next milestone:</label>
-        <select id="statusSelect" class="form-select" required>
-          <option value="" disabled selected>-- Choose status --</option>
-          <option value="Started">Started</option>
-          <option value="Completed">Completed</option>
+        <label for="milestoneSelect" class="form-label">Choose next milestone:</label>
+        <select id="milestoneSelect" class="form-select" required>
+          <option value="" disabled selected>-- Select milestone --</option>
+          {% for m in milestones %}
+            {% if not m.is_approved %}
+              <option value="{{ m.milestone_id }}">{{ m.milestone_name }}</option>
+            {% endif %}
+          {% endfor %}
         </select>
       </div>
       <button type="submit" class="btn btn-primary">Submit</button>
@@ -79,25 +46,18 @@
   {% endif %}
 </div>
 
-<pre>
-{% for m in milestones %}
-  {{ m.milestone_name }}: is_approved={{ m.is_approved }}
-{% endfor %}
-</pre>
-
 <script>
 function submitMilestone(event) {
   event.preventDefault();
-  const milestoneId = document.getElementById('milestoneId').value;
-  const status = document.getElementById('statusSelect').value;
-  if (!milestoneId || !status) return;
+  const milestoneId = document.getElementById('milestoneSelect').value;
+  if (!milestoneId) return;
   fetch("{{ url_for('shop.scan_update', order_id=order_id) }}", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ milestone_id: milestoneId, status: status })
+    body: JSON.stringify({ milestone_id: milestoneId })
   })
-  .then(response => response.json().then(data => ({status: response.status, body: data})))
-  .then(({status, body}) => {
+  .then(r => r.json().then(b => ({ status: r.status, body: b })))
+  .then(({ status, body }) => {
     if (status === 201 && body.message === "OK") {
       document.getElementById('confirmation').classList.remove('d-none');
       setTimeout(() => window.location.reload(), 1200);
@@ -105,7 +65,7 @@ function submitMilestone(event) {
       alert(body.error || "Error updating milestone.");
     }
   })
-  .catch(err => {
+  .catch(() => {
     alert("Network or server error.");
   });
 }
