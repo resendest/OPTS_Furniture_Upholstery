@@ -1,3 +1,6 @@
+# This file pertains to the order creation and processing logic for the OPTS application.
+# It handles the creation of new orders, including customer details, product codes,
+# and order specifications. 
 import pathlib
 from datetime import datetime
 from reportlab.lib.pagesizes import LETTER

@@ -1,3 +1,7 @@
+# this file is for managing database connections and executing SQL queries
+# it uses a connection pool for efficient database access
+# it includes a function to execute SQL commands and return results
+# make sure to install psycopg2 and python-dotenv for this to work (see requirements.txt)
 import os
 import logging
 from dotenv import load_dotenv
@@ -5,6 +9,8 @@ from psycopg2.pool import SimpleConnectionPool
 from psycopg2.extras import RealDictCursor
 
 load_dotenv()
+
+# Database connection pool settings
 
 _pool = SimpleConnectionPool(
     minconn=int(os.getenv("DB_MIN_CONN", 1)),
@@ -16,7 +22,7 @@ _pool = SimpleConnectionPool(
     port=os.getenv("DB_PORT", "5432"),
     cursor_factory=RealDictCursor,
 )
-
+# execution context for the connection pool
 
 def execute(sql: str, params: tuple = ()):
     """
@@ -45,7 +51,7 @@ def execute(sql: str, params: tuple = ()):
     finally:
         _pool.putconn(conn)
 
-
+# Query execution context
 def query(sql: str, params: tuple = ()):
     """
     Convenience for SELECTs when you always want a list back.

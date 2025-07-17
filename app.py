@@ -1,3 +1,8 @@
+# This file is the main entry point for the Flask application.
+# It initializes the app, sets up routes, and handles order creation.
+# It also includes user registration, login, and email sending functionality.
+# Ultimately, it serves as the core of the OPTS application.
+
 import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -13,20 +18,29 @@ from flask import (
     session, g
 )
 from dotenv import load_dotenv
-
-from backend.order_processing import create_order
-from backend.db import execute
-from backend.shop_routes import shop_bp
-from backend.email_utils import init_mail
-
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+
+# Define this before any @login_required decorators are used:
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "user_id" not in session:
+            flash("Please log in to access this page.", "warning")
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Load environment variables
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret")
 app.config["BASE_URL"] = os.getenv("BASE_URL", "http://localhost:5000").rstrip("/")
+
+from backend.order_processing import create_order
+from backend.db import execute
+from backend.shop_routes import shop_bp
+from backend.email_utils import init_mail
 
 init_mail(app)  # Initialize Flask-Mail with app config
 
@@ -62,6 +76,8 @@ def create_order_page():
             return redirect(url_for("create_order_page"))
 
         # ─── Product codes ─────────────────────────────────
+        # Split by newlines, strip whitespace, ignore empty lines
+        # This allows pasting multiple codes at once
         raw_codes = (request.form.get("product_codes") or "").splitlines()
         product_codes = [c.strip() for c in raw_codes if c.strip()]
         if not product_codes:
@@ -309,16 +325,15 @@ def client_dashboard():
 def view_order(order_id):
     cid = session.get("customer_id")
     is_staff = session.get("is_staff")
-    # Allow staff to view any order, clients only their own
+    
     if not cid and not is_staff:
         return redirect(url_for("login"))
 
     if is_staff:
-        # Staff can view any order
         rows = execute(
             """
             SELECT o.order_id, o.invoice_no, o.created_at, o.due_date, o.notes, o.status,
-                   c.name AS customer_name, c.email AS customer_email
+                   c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone
             FROM orders o
             JOIN customers c ON o.customer_id = c.customer_id
             WHERE o.order_id = %s
@@ -326,24 +341,46 @@ def view_order(order_id):
             (order_id,)
         )
     else:
-        # Clients can only view their own orders
         rows = execute(
             """
             SELECT o.order_id, o.invoice_no, o.created_at, o.due_date, o.notes, o.status,
-                   c.name AS customer_name, c.email AS customer_email
+                   c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone
             FROM orders o
             JOIN customers c ON o.customer_id = c.customer_id
             WHERE o.order_id = %s AND o.customer_id = %s
             """,
             (order_id, cid)
         )
+    
     if not rows:
         flash(f"Order #{order_id} not found.", "danger")
         return redirect(url_for("client_dashboard") if not is_staff else url_for("portal"))
 
     order = rows[0]
     order["id"] = order["order_id"]
-    return render_template("order_detail.html", order=order)
+
+    # CRITICAL DEBUG: Let's see what's actually in the database
+    print(f"DEBUG: Looking for milestones for order_id = {order_id}")
+    
+    # Try a simpler query first
+    test_milestones = execute(
+        "SELECT * FROM order_milestones WHERE order_id = %s",
+        (order_id,)
+    )
+    print(f"DEBUG: Raw milestone query returned: {test_milestones}")
+    
+    # Now the original query
+    milestones = execute(
+        "SELECT milestone_id, milestone_name, stage_number, status, is_client_action, is_approved "
+        "FROM order_milestones WHERE order_id = %s ORDER BY stage_number",
+        (order_id,)
+    ) or []
+
+    print(f"DEBUG: Fetched {len(milestones)} milestones for order {order_id}")
+    for i, m in enumerate(milestones):
+        print(f"DEBUG: Milestone {i}: {dict(m)}")
+
+    return render_template("order_detail.html", order=order, milestones=milestones)
 
 @app.route("/status/<int:order_id>")
 def order_status(order_id):
@@ -380,7 +417,8 @@ def portal():
     if not session.get("is_staff"):
         flash("Staff login required.", "danger")
         return redirect(url_for("login"))
-    # Join orders with customers to get name and email
+
+    # fetch all orders
     orders = execute(
         """
         SELECT o.*, c.name AS customer_name, c.email AS customer_email
@@ -389,6 +427,8 @@ def portal():
         ORDER BY o.order_id DESC
         """
     ) or []
+
+    # fetch counts by milestone name (you already have this)
     milestone_counts = {}
     if orders:
         order_ids = [o["order_id"] for o in orders]
@@ -400,19 +440,70 @@ def portal():
         ) or []
         for row in rows:
             milestone_counts[row["milestone_name"]] = row["count"]
-    return render_template("master_dashboard.html", orders=orders, milestone_counts=milestone_counts)
+
+        # now pull every milestone status for those orders
+        ms = execute(
+            "SELECT order_id, status FROM order_milestones WHERE order_id IN %s",
+            (tuple(order_ids),)
+        ) or []
+
+        # group statuses per order
+        from collections import defaultdict
+        grouped = defaultdict(list)
+        for r in ms:
+            grouped[r["order_id"]].append(r["status"])
+
+        # compute a master status per order
+        for o in orders:
+            sts = grouped[o["order_id"]]
+            if not sts or all(s == "Not Started" for s in sts):
+                o["computed_status"] = "Not Started"
+            elif all(s == "Completed" for s in sts):
+                o["computed_status"] = "Completed"
+            else:
+                o["computed_status"] = "In Progress"
+
+    return render_template(
+        "master_dashboard.html",
+        orders=orders,
+        milestone_counts=milestone_counts
+    )
 
 @app.route("/order/<int:order_id>/edit", methods=["POST"])
+@login_required
 def edit_order(order_id):
     if not session.get("is_staff"):
         flash("Unauthorized", "danger")
         return redirect(url_for("view_order", order_id=order_id))
-    new_status = request.form.get("status")
-    execute(
-        "UPDATE orders SET status=%s WHERE order_id=%s",
-        (new_status, order_id)
-    )
-    flash("Order updated.", "success")
+
+    print(f"DEBUG: Editing order {order_id}")
+    print(f"DEBUG: Form data: {dict(request.form)}")
+    
+    updated = 0
+    for field, value in request.form.items():
+        print(f"DEBUG: Processing field {field} = {value}")
+        if field.startswith("milestone_status_"):
+            try:
+                milestone_id = int(field.replace("milestone_status_", ""))
+                print(f"DEBUG: Updating milestone {milestone_id} to {value}")
+                
+                result = execute(
+                    "UPDATE order_milestones SET status = %s WHERE milestone_id = %s",
+                    (value, milestone_id)
+                )
+                print(f"DEBUG: Update result: {result}")
+                updated += 1
+            except (ValueError, IndexError) as e:
+                print(f"DEBUG: Error processing {field}: {e}")
+                continue
+
+    print(f"DEBUG: Updated {updated} milestones")
+    
+    if updated:
+        flash(f"{updated} milestone(s) updated.", "success")
+    else:
+        flash("No milestones updated.", "info")
+
     return redirect(url_for("view_order", order_id=order_id))
 
 @app.route("/add_staff", methods=["GET", "POST"])
@@ -453,18 +544,6 @@ def add_staff():
         flash("Staff user added!", "success")
         return redirect(url_for("portal"))
     return render_template("add_staff.html")
-
-from flask import redirect, url_for, session, flash
-
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if "user_id" not in session:
-            flash("Please log in to access this page.", "warning")
-            return redirect(url_for("login"))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @app.route("/scan/<int:order_id>", methods=["GET"])
 @login_required

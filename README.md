@@ -37,7 +37,7 @@ Note: This project is for the sole use of Lousso Designs at this time.
 - `backend/order_processing.py` — Order creation and PDF logic
 - `backend/db.py` — Database connection and helpers
 - `templates/` — All HTML/CSS templates
-- `sql/lousso_opts_schema.sql` — Database schema
+- `sql/v3_lousso_opts_schema.sql` — Database schema
 
 ## Usage
 

@@ -1,3 +1,6 @@
+# This file is for handling shop related routes in the Flask app.
+# It includes endpoints for scanning orders and viewing order details.
+
 from flask import (
     Blueprint, request, render_template, jsonify, abort
 )

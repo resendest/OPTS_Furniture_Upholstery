@@ -27,10 +27,11 @@
     <div class="col">
       <select id="statusFilter" class="form-select" onchange="filterOrders()">
         <option value="">All Statuses</option>
-        {% for status in orders | map(attribute='status') | unique | sort %}
-          {% if status %}
+        {% for status in orders
+                    | map(attribute='computed_status')
+                    | unique
+                    | sort %}
           <option value="{{ status }}">{{ status }}</option>
-          {% endif %}
         {% endfor %}
       </select>
     </div>
@@ -52,7 +53,6 @@
         <table class="table table-striped align-middle mb-0" id="ordersTable">
           <thead>
             <tr>
-              <th>Order ID</th>
               <th>Invoice #</th>
               <th>Customer</th>
               <th>Due Date</th>
@@ -64,11 +64,10 @@
           <tbody>
             {% for o in orders %}
             <tr>
-             <td>{{ o.order_id }}</td>
               <td>{{ o.invoice_no }}</td>
               <td>{{ o.customer_name or '' }}</td>
               <td>{{ o.due_date }}</td>
-              <td>{{ o.status or '' }}</td>
+              <td>{{ o.computed_status or 'Not Started' }}</td>
               <td>
                 {% if o.lousso_pdf_path %}
                   <a href="{{ o.lousso_pdf_path }}" target="_blank">PDF</a>

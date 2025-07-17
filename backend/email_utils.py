@@ -1,3 +1,7 @@
+# this file is for sending emails using Flask-Mail and Google SMTP
+# it includes a function to send registration emails
+# and a function to initialize the Flask-Mail instance
+
 import os
 from flask_mail import Mail, Message
 from flask import current_app
@@ -21,7 +25,7 @@ def init_mail(app):
     app.config["MAIL_DEBUG"] = True
     mail.init_app(app)
 
-
+# Sending registration email
 def send_registration_email(user_id: int, to_addr: str, token: str, order_id: int):
     """
     Example helper you already tried before—uses app.config['BASE_URL'].
