@@ -1,10 +1,10 @@
 # Ignore the .env file containing sensitive information
 .env
 
-# Ignore everything in the static folder
-static/*
+# Ignore the static folder and all its contents
+/static/
 
-# Ignore all test files
-tests/*
+# Ignore the tests folder and all its contents
+/tests/
 
 
