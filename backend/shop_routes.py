@@ -79,7 +79,7 @@ def view_order(order_id):
         abort(404)
     order = rows[0]
 
-    # fetch its milestones
+    # fetch its milestones for scan view
     milestones = execute(
         """
         SELECT milestone_name, status, is_approved

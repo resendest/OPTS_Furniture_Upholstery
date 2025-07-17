@@ -25,8 +25,8 @@ server.starttls()
 server.ehlo()
 try:
     server.login(user, pwd)
-    print("✅ SMTP login succeeded")
+    print("SMTP login succeeded")
 except smtplib.SMTPAuthenticationError as e:
-    print("❌ SMTP login failed:", e)
+    print("SMTP login failed:", e)
 finally:
     server.quit()

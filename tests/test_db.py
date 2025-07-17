@@ -1,5 +1,3 @@
-# backend/tests/test_db.py
-
 import pytest
 from backend.db import execute, query, transaction
 

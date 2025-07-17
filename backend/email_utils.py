@@ -9,7 +9,7 @@ def init_mail(app):
     """
     Configure Flask-Mail on the app and attach the Mail() instance.
     """
-    # you can adjust these env-var names to match your .env
+    # make sure these variables match .env settings
     app.config.update(
         MAIL_SERVER        = os.getenv("EMAIL_HOST"),
         MAIL_PORT          = int(os.getenv("EMAIL_PORT", 587)),

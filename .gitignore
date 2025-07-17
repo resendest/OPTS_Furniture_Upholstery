@@ -3,3 +3,8 @@
 
 # Ignore everything in the static folder
 static/*
+
+# Ignore all test files
+tests/*
+
+

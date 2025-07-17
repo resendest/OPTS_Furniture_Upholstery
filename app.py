@@ -31,7 +31,8 @@ app.config["BASE_URL"] = os.getenv("BASE_URL", "http://localhost:5000").rstrip("
 init_mail(app)  # Initialize Flask-Mail with app config
 
 # Base URL for QR code links
-BASE_URL = os.getenv("BASE_URL", "http://localhost:5000").rstrip("/")
+# Note: This should match the .env BASE_URL as well as your deployment server public URL
+BASE_URL = os.getenv("BASE_URL", "http://localhost:5000").rstrip("/") 
 
 # Register blueprint
 app.register_blueprint(shop_bp)
@@ -525,4 +526,4 @@ def inject_milestone_choices():
     return dict(milestone_choices=MILESTONE_CHOICES)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0")

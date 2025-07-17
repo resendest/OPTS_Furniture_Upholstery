@@ -17,8 +17,8 @@ WORK_DIR = BASE_DIR / "static" / "work_orders"
 QR_DIR.mkdir(parents=True, exist_ok=True)
 WORK_DIR.mkdir(parents=True, exist_ok=True)
 
-
-def make_work_order_pdf(
+# Get the order details and generate a PDF
+def make_work_order_pdf(  
     path: pathlib.Path,
     order_id: int,
     client_name: str,
@@ -38,15 +38,13 @@ def make_work_order_pdf(
     initials: str,
     qr_path: str | None,
 ):
-    """
-    Generate a clean, organized work order PDF at `path`.
-    """
+    # Create a PDF canvas for the work order
     c = canvas.Canvas(str(path), pagesize=LETTER)
     w, h = LETTER
     margin = 0.5 * inch
     y = h - margin
 
-    # Title and date
+    # Title and date addition
     c.setFont("Helvetica-Bold", 16)
     c.drawString(margin, y, f"Work Order #{order_id}")
     c.setFont("Helvetica", 10)
@@ -104,7 +102,7 @@ def make_work_order_pdf(
     c.showPage()
     c.save()
 
-
+# Create a new order with all details from order creation form in app.
 def create_order(
     name: str,
     email: str,
@@ -134,7 +132,7 @@ def create_order(
     topcoat: str | None,
     customer_initials: str | None,
 ) -> dict:
-    # 1) Lookup or create customer
+    # Lookup or create customer
     cust_rows = execute(
         "SELECT customer_id FROM customers WHERE email=%s",
         (email,)
@@ -148,14 +146,14 @@ def create_order(
         )
         customer_id = new_cust["customer_id"]
 
-    # 2) Create order and grab its ID
+    # Create order and grab its ID
     order_res = execute(
         "INSERT INTO orders(customer_id,invoice_no,due_date,notes) VALUES(%s,%s,%s,%s) RETURNING order_id",
         (customer_id, invoice_no, due_date, notes)
     )
     order_id = order_res["order_id"]
 
-    # 3) Insert milestones & items
+    # Insert milestones & items
     for m in milestone_list:
         execute(
             "INSERT INTO order_milestones(order_id,milestone_name) VALUES(%s,%s)",
@@ -167,7 +165,7 @@ def create_order(
             (order_id, code)
         )
 
-    # 4) Persist the detailed specs
+    # Persist the detailed specs
     execute(
         """
         INSERT INTO order_specs (
@@ -187,7 +185,7 @@ def create_order(
         )
     )
 
-    # 5) Generate QR and PDFs
+    # Generate QR and PDFs
     qr_url = generate_order_qr(order_id, base_url, str(QR_DIR))
 
     upholstery      = {"back": back_style, "seat": seat_style}
@@ -214,7 +212,7 @@ def create_order(
         qr_path=None
     )
 
-    # 6) Update order record with PDF & QR paths
+    # Update order record with PDF & QR paths
     execute(
         "UPDATE orders SET qr_path=%s, lousso_pdf_path=%s, client_pdf_path=%s WHERE order_id=%s",
         (
