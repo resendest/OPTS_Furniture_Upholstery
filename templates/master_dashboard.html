@@ -96,11 +96,12 @@
     const dueDateVal   = document.getElementById('dueDateFilter').value;
     const table        = document.getElementById('ordersTable');
     const trs          = table.getElementsByTagName('tr');
+    
     for (let i = 1; i < trs.length; i++) {
       const tds = trs[i].getElementsByTagName('td');
       let show  = true;
 
-      // Search filter
+      // Search filter - search all columns
       if (searchInput) {
         let found = false;
         for (let j = 0; j < tds.length; j++) {
@@ -112,14 +113,14 @@
         if (!found) show = false;
       }
 
-      // Customer filter (col 2)
-      if (customerVal && tds[2].textContent.trim() !== customerVal) show = false;
+      // Customer filter - column 1 (0-indexed)
+      if (customerVal && tds[1].textContent.trim() !== customerVal) show = false;
 
-      // Status filter (col 4)
-      if (statusVal && tds[4].textContent.trim() !== statusVal) show = false;
+      // Status filter - column 3 (0-indexed)
+      if (statusVal && tds[3].textContent.trim() !== statusVal) show = false;
 
-      // Due date filter (col 3)
-      if (dueDateVal && tds[3].textContent.trim() !== dueDateVal) show = false;
+      // Due date filter - column 2 (0-indexed)
+      if (dueDateVal && tds[2].textContent.trim() !== dueDateVal) show = false;
 
       trs[i].style.display = show ? '' : 'none';
     }

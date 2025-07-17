@@ -85,7 +85,7 @@ def view_order(order_id):
     # fetch its milestones for scan view
     milestones = execute(
         """
-        SELECT milestone_name, status, is_approved
+        SELECT milestone_id, milestone_name, status, is_approved
           FROM order_milestones
          WHERE order_id = %s
          ORDER BY milestone_id

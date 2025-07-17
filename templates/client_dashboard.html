@@ -19,23 +19,20 @@
           <tr>
             <td>{{ o.invoice_no }}</td>
             <td>
-              {% if o.status %}
-                <span class="badge 
-                  {% if o.status == 'Completed' %}
-                    bg-success
-                  {% elif o.status == 'In Progress' %}
-                    bg-warning text-dark
-                  {% elif o.status == 'Cancelled' %}
-                    bg-danger
-                  {% else %}
-                    bg-secondary
-                  {% endif %}
-                ">
-                  {{ o.status }}
-                </span>
-              {% else %}
-                <span class="badge bg-secondary">Submitted</span>
-              {% endif %}
+              {% set status = o.computed_status or 'Not Started' %}
+              <span class="badge 
+                {% if status == 'Completed' %}
+                  bg-success
+                {% elif status == 'In Progress' %}
+                  bg-warning text-dark
+                {% elif status == 'Not Started' %}
+                  bg-secondary
+                {% else %}
+                  bg-secondary
+                {% endif %}
+              ">
+                {{ status }}
+              </span>
             </td>
             <td style="white-space: pre-line;">{{ o.notes or "No notes provided." }}</td>
             <td>
@@ -59,8 +56,8 @@
     </div>
   {% else %}
     <div class="alert alert-info text-center">
-      You don’t have any orders yet.<br>
-      Place one and it’ll show up here!
+      You don't have any orders yet.<br>
+      Place one and it'll show up here!
     </div>
   {% endif %}
 </div>

@@ -313,18 +313,50 @@ def client_dashboard():
     cid = session.get("customer_id")
     if not cid:
         return redirect(url_for("login"))
+    
     orders = execute(
         "SELECT order_id, invoice_no, due_date, notes, status, client_pdf_path "
         "FROM orders WHERE customer_id=%s "
-        "ORDER BY invoice_no DESC",  # Changed from order_id
+        "ORDER BY invoice_no DESC",
         (cid,)
     ) or []
+
+    # Add computed status logic for client dashboard too
+    if orders:
+        order_ids = [o["order_id"] for o in orders]
+        
+        # Pull milestone statuses for these orders
+        ms = execute(
+            "SELECT order_id, status FROM order_milestones WHERE order_id IN %s",
+            (tuple(order_ids),)
+        ) or []
+
+        # Group statuses per order
+        from collections import defaultdict
+        grouped = defaultdict(list)
+        for r in ms:
+            grouped[r["order_id"]].append(r["status"])
+
+        # Compute master status per order
+        for o in orders:
+            sts = grouped[o["order_id"]]
+            if not sts or all(s == "Not Started" for s in sts):
+                o["computed_status"] = "Not Started"
+            elif all(s == "Completed" for s in sts):
+                o["computed_status"] = "Completed"
+            else:
+                o["computed_status"] = "In Progress"
+
     return render_template("client_dashboard.html", orders=orders)
 
 @app.route("/order/<int:order_id>")
 def view_order(order_id):
+    print(f"🔥🔥🔥 VIEW_ORDER ROUTE CALLED FOR ORDER {order_id} 🔥🔥🔥")
+    
     cid = session.get("customer_id")
     is_staff = session.get("is_staff")
+    
+    print(f"🔥 Customer ID: {cid}, Is Staff: {is_staff}")
     
     if not cid and not is_staff:
         return redirect(url_for("login"))
@@ -476,29 +508,19 @@ def edit_order(order_id):
         flash("Unauthorized", "danger")
         return redirect(url_for("view_order", order_id=order_id))
 
-    print(f"DEBUG: Editing order {order_id}")
-    print(f"DEBUG: Form data: {dict(request.form)}")
-    
     updated = 0
     for field, value in request.form.items():
-        print(f"DEBUG: Processing field {field} = {value}")
         if field.startswith("milestone_status_"):
             try:
                 milestone_id = int(field.replace("milestone_status_", ""))
-                print(f"DEBUG: Updating milestone {milestone_id} to {value}")
-                
-                result = execute(
+                execute(
                     "UPDATE order_milestones SET status = %s WHERE milestone_id = %s",
                     (value, milestone_id)
                 )
-                print(f"DEBUG: Update result: {result}")
                 updated += 1
-            except (ValueError, IndexError) as e:
-                print(f"DEBUG: Error processing {field}: {e}")
+            except (ValueError, IndexError):
                 continue
 
-    print(f"DEBUG: Updated {updated} milestones")
-    
     if updated:
         flash(f"{updated} milestone(s) updated.", "success")
     else:
@@ -603,6 +625,24 @@ MILESTONE_CHOICES = [
 @app.context_processor
 def inject_milestone_choices():
     return dict(milestone_choices=MILESTONE_CHOICES)
+
+@app.route("/debug_order/<int:order_id>")
+def debug_order(order_id):
+    print(f"🔥 DEBUG ROUTE CALLED FOR ORDER {order_id}")
+    
+    milestones = execute(
+        "SELECT milestone_id, milestone_name, status FROM order_milestones WHERE order_id = %s",
+        (order_id,)
+    )
+    
+    result = f"<h1>Debug for Order {order_id}</h1>"
+    if milestones:
+        for m in milestones:
+            result += f"<p>ID: {m.get('milestone_id')}, Name: {m.get('milestone_name')}, Status: {m.get('status')}</p>"
+    else:
+        result += "<p>No milestones found</p>"
+    
+    return result
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
