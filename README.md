@@ -3,12 +3,12 @@
 Created by Wentworth students Tyler Resendes and Samuel Gjencaj
 for their Summer 2025 MGMT 5510 - CIS Senior Capstone course.
 
-OPTS is a web-based platform for Lousso Designs,a custom upholstery business in the Greater Boston area, to manage custom upholstery orders from creation to delivery.  
-OPTS enables staff to create orders with project-specific milestones, track production progress, and generate work order PDFs.  
+The OPTS is a web-based platform for Lousso Designs, a custom upholstery business in the Greater Boston area, to manage custom upholstery orders from creation to delivery.  
+The OPTS enables staff to create orders with project-specific milestones, track production progress, and generate work order PDFs.  
 Clients can log in to view their order status and download documentation.  
 The system supports role-based access, milestone customization, QR code scanning for workflow updates, and automated email notifications.
 
-**Disclaimer:** This project is currently optimized for use by Lousso Designs. Customization or deployment for other businesses may require additional configuration or development.
+**Disclaimer:** This project is currently intended and optimized for use by Lousso Designs. Customization or deployment for other businesses may require additional configuration or development.
 
 ## Features
 
@@ -36,7 +36,7 @@ The system supports role-based access, milestone customization, QR code scanning
 - `backend/shop_routes.py` — Order, scan, and dashboard routes
 - `backend/order_processing.py` — Order and PDF logic and creation.
 - `backend/db.py` — Database connection and helpers
-- `templates/` — All HTML/CSS templates
+- `templates/` — Folder for all HTML/CSS templates
 - `sql/v3_lousso_opts_schema.sql` — Database schema
 
 ## User Priveleges
