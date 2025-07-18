@@ -13,8 +13,8 @@ Note: This project is for the sole use of Lousso Designs at this time.
 ## Features
 
 - **Order Creation:** Staff can create new orders, enter customer info, and select only the milestones needed for each project.
-- **Custom Milestones:** Each order has its own set of milestones, chosen at creation and editable later.
-- **Scan & Update:** Staff can update milestone status via a scan page (QR code supported).
+- **Custom Milestones:** Each order has its own set of milestones that are chosen at order creation for project customization.
+- **Scan & Update:** Staff can update milestone status via a QR-supported scan page.
 - **My Orders:** Clients can view order details, milestone history, and download client-facing PDFs that exclude QR codes.
 - **Master Dashboard:** Staff can view order details for all projects, their milestone historys, and download PDFs that include QR codes for staff use.
 - **Email Notifications:** Sends registration and status emails to clients.
@@ -23,8 +23,8 @@ Note: This project is for the sole use of Lousso Designs at this time.
 
 ## Tech Stack
 
-- **Backend:** Python 3, Flask, psycopg2
-- **Frontend:** Jinja2 templates, Bootstrap 5
+- **Backend:** Python, Flask
+- **Frontend:** Jinja2 templates, Bootstrap
 - **Database:** PostgreSQL
 - **PDF:** ReportLab (python library)
 - **QR Codes:** qrcode (python library)
@@ -34,12 +34,12 @@ Note: This project is for the sole use of Lousso Designs at this time.
 
 - `app.py` — Main Flask app
 - `backend/shop_routes.py` — Order, scan, and dashboard routes
-- `backend/order_processing.py` — Order creation and PDF logic
+- `backend/order_processing.py` — Order and PDF logic and creation.
 - `backend/db.py` — Database connection and helpers
 - `templates/` — All HTML/CSS templates
 - `sql/v3_lousso_opts_schema.sql` — Database schema
 
-## Usage
+## User Priveleges
 
 - **Staff:** Log in, create orders, select milestones, and manage progress.
 - **Clients:** Log in to view their orders and download PDFs.
