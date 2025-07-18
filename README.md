@@ -26,8 +26,8 @@ Note: This project is for the sole use of Lousso Designs at this time.
 - **Backend:** Python, Flask
 - **Frontend:** Jinja2 templates, Bootstrap
 - **Database:** PostgreSQL
-- **PDF:** ReportLab (python library)
-- **QR Codes:** qrcode (python library)
+- **PDF Generation:** ReportLab (python library)
+- **QR Code Generation:** qrcode (python library)
 - **Email Processing:** Flask-Mail, Gmail SMTP
 
 ## Key Files
