@@ -508,23 +508,36 @@ def edit_order(order_id):
         flash("Unauthorized", "danger")
         return redirect(url_for("view_order", order_id=order_id))
 
+    # First, get the current milestone statuses
+    current_milestones = execute(
+        "SELECT milestone_id, status FROM order_milestones WHERE order_id = %s",
+        (order_id,)
+    ) or []
+    
+    # Create a dict of current statuses
+    current_status = {str(m["milestone_id"]): m["status"] for m in current_milestones}
+
     updated = 0
     for field, value in request.form.items():
         if field.startswith("milestone_status_"):
             try:
                 milestone_id = int(field.replace("milestone_status_", ""))
-                execute(
-                    "UPDATE order_milestones SET status = %s WHERE milestone_id = %s",
-                    (value, milestone_id)
-                )
-                updated += 1
+                milestone_id_str = str(milestone_id)
+                
+                # Only update if the status has actually changed
+                if milestone_id_str in current_status and current_status[milestone_id_str] != value:
+                    execute(
+                        "UPDATE order_milestones SET status = %s WHERE milestone_id = %s",
+                        (value, milestone_id)
+                    )
+                    updated += 1
             except (ValueError, IndexError):
                 continue
 
-    if updated:
-        flash(f"{updated} milestone(s) updated.", "success")
+    if updated > 0:
+        flash("All changes have been saved", "success")
     else:
-        flash("No milestones updated.", "info")
+        flash("No changes were made", "info")
 
     return redirect(url_for("view_order", order_id=order_id))
 
