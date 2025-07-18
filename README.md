@@ -8,7 +8,7 @@ OPTS enables staff to create orders with project-specific milestones, track prod
 Clients can log in to view their order status and download documentation.  
 The system supports role-based access, milestone customization, QR code scanning for workflow updates, and automated email notifications.
 
-Note: This project is for the sole use of Lousso Designs at this time.
+**Disclaimer:** This project is currently optimized for use by Lousso Designs. Customization or deployment for other businesses may require additional configuration or development.
 
 ## Features
 
