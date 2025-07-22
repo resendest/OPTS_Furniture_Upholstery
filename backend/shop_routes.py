@@ -39,7 +39,8 @@ def scan_order(order_id):
         invoice_no=invoice_no,
         milestones=milestones
     )
-
+# `scan_update` endpoint to handle POST requests for updating milestones
+# This endpoint is called when the staff scans a QR code to approve a milestone.
 @shop_bp.route("/scan/<int:order_id>", methods=["POST"])
 def scan_update(order_id):
     data = request.get_json() or {}

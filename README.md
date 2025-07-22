@@ -8,7 +8,7 @@ The OPTS enables staff to create orders with project-specific milestones, track 
 Clients can log in to view their order status and download documentation.  
 The system supports role-based access, milestone customization, QR code scanning for workflow updates, and automated email notifications.
 
-**Disclaimer:** This project is currently intended and optimized for use by Lousso Designs. Customization or deployment for other businesses may require additional configuration or development.
+**Disclaimer:** This project is currently intended and optimized for use by Lousso Designs. Customization or deployment for other businesses may require additional configuration or development. 
 
 ## Features
 
@@ -23,9 +23,11 @@ The system supports role-based access, milestone customization, QR code scanning
 
 ## Tech Stack
 
-- **Backend:** Python, Flask
+- **Backend:** Python, Flask (framework)
 - **Frontend:** Jinja2 templates, Bootstrap
 - **Database:** PostgreSQL
+- **Application Server:** Gunicorn (production)
+- **Hosting Platform** Render (render.com)
 - **PDF Generation:** ReportLab (python library)
 - **QR Code Generation:** qrcode (python library)
 - **Email Processing:** Flask-Mail, Gmail SMTP
@@ -63,12 +65,12 @@ The system supports role-based access, milestone customization, QR code scanning
 - Requires uploading to GitHub first
 - See "Zip File Setup" section below
 
-### Quick Start (Render Hosting)
+### Quick Start
 
 This application is designed to deploy easily on **Render** (render.com), which provides reliable web hosting with PostgreSQL database support.
 
 #### Step 1: Create Render Account
-1. Go to [render.com](https://render.com) and create an account
+1. Go to Render website (render.com) and create an account
 2. Connect your GitHub account to Render
 
 #### Step 2: Prepare Your Repository
@@ -128,7 +130,7 @@ In your web service settings, add these environment variables:
 
 If you received this as a zip file and want to deploy:
 
-#### Step 1: Extract and Upload to GitHub
+#### Extract and Upload to GitHub
 1. **Extract the zip file** to your computer
 2. **Create a new repository** on [GitHub](https://github.com)
 3. **Upload all files** to your new GitHub repository:
@@ -138,7 +140,6 @@ If you received this as a zip file and want to deploy:
    git commit -m "Initial OPTS deployment"
    git remote add origin https://github.com/yourusername/opts-deployment.git
    git push -u origin main
-   ```
-
+4. **Refer to step 2 under Quick Start**
 
 

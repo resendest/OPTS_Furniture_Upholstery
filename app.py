@@ -402,7 +402,7 @@ def portal():
         """
     ) or []
 
-    # fetch counts by milestone name (you already have this)
+    # fetch counts by milestone name
     milestone_counts = {}
     if orders:
         order_ids = [o["order_id"] for o in orders]
@@ -500,7 +500,7 @@ def add_staff():
             return render_template("add_staff.html")
 
         password_hash = generate_password_hash(password)
-        # Insert new staff user
+        # Insert new staff user into the database
         execute(
             "INSERT INTO customers (name, email, password_hash, is_staff) VALUES (%s, %s, %s, TRUE)",
             (name, email, password_hash)
@@ -565,6 +565,10 @@ def inject_customer_name():
     return {"customer_name": getattr(g, "customer_name", None)}
 
 # Client-provided milestone choices
+# These are the milestones that can be selected when creating an order
+# They represent the various stages of the order processing workflow.
+# They are used to track the progress of an order through its lifecycle.
+# The choices are displayed in the order creation form and can be selected by the staff.
 # This list can be extended with new milestones as needed
 MILESTONE_CHOICES = [
   "Custom Material Preparation",
@@ -573,7 +577,7 @@ MILESTONE_CHOICES = [
   "Awaiting Quality Check",
   "Passed Quality Check",
   "Out for Delivery",
-  # …any new ones…
+  # …any new ones can be added here
 ]
 
 # inject into ALL templates
@@ -587,7 +591,7 @@ def view_order(order_id):
     # Just redirect to the blueprint route
     return redirect(url_for("shop.view_order", order_id=order_id))
 
-
+# run the app
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
