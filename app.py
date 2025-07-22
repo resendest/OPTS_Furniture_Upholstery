@@ -20,6 +20,7 @@ from flask import (
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+import logging
 
 # Define this before any @login_required decorators are used:
 def login_required(f):
@@ -36,6 +37,10 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "dev_secret")
 app.config["BASE_URL"] = os.getenv("BASE_URL", "http://localhost:5000").rstrip("/")
+
+# Configure logging for production
+if not app.debug:
+    logging.basicConfig(level=logging.INFO)
 
 from backend.order_processing import create_order
 from backend.db import execute
@@ -349,70 +354,7 @@ def client_dashboard():
 
     return render_template("client_dashboard.html", orders=orders)
 
-@app.route("/order/<int:order_id>")
-def view_order(order_id):
-    print(f"🔥🔥🔥 VIEW_ORDER ROUTE CALLED FOR ORDER {order_id} 🔥🔥🔥")
     
-    cid = session.get("customer_id")
-    is_staff = session.get("is_staff")
-    
-    print(f"🔥 Customer ID: {cid}, Is Staff: {is_staff}")
-    
-    if not cid and not is_staff:
-        return redirect(url_for("login"))
-
-    if is_staff:
-        rows = execute(
-            """
-            SELECT o.order_id, o.invoice_no, o.created_at, o.due_date, o.notes, o.status,
-                   c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone
-            FROM orders o
-            JOIN customers c ON o.customer_id = c.customer_id
-            WHERE o.order_id = %s
-            """,
-            (order_id,)
-        )
-    else:
-        rows = execute(
-            """
-            SELECT o.order_id, o.invoice_no, o.created_at, o.due_date, o.notes, o.status,
-                   c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone
-            FROM orders o
-            JOIN customers c ON o.customer_id = c.customer_id
-            WHERE o.order_id = %s AND o.customer_id = %s
-            """,
-            (order_id, cid)
-        )
-    
-    if not rows:
-        flash(f"Order #{order_id} not found.", "danger")
-        return redirect(url_for("client_dashboard") if not is_staff else url_for("portal"))
-
-    order = rows[0]
-    order["id"] = order["order_id"]
-
-    # CRITICAL DEBUG: Let's see what's actually in the database
-    print(f"DEBUG: Looking for milestones for order_id = {order_id}")
-    
-    # Try a simpler query first
-    test_milestones = execute(
-        "SELECT * FROM order_milestones WHERE order_id = %s",
-        (order_id,)
-    )
-    print(f"DEBUG: Raw milestone query returned: {test_milestones}")
-    
-    # Now the original query
-    milestones = execute(
-        "SELECT milestone_id, milestone_name, stage_number, status, is_client_action, is_approved "
-        "FROM order_milestones WHERE order_id = %s ORDER BY stage_number",
-        (order_id,)
-    ) or []
-
-    print(f"DEBUG: Fetched {len(milestones)} milestones for order {order_id}")
-    for i, m in enumerate(milestones):
-        print(f"DEBUG: Milestone {i}: {dict(m)}")
-
-    return render_template("order_detail.html", order=order, milestones=milestones)
 
 @app.route("/status/<int:order_id>")
 def order_status(order_id):
@@ -639,23 +581,13 @@ MILESTONE_CHOICES = [
 def inject_milestone_choices():
     return dict(milestone_choices=MILESTONE_CHOICES)
 
-@app.route("/debug_order/<int:order_id>")
-def debug_order(order_id):
-    print(f"🔥 DEBUG ROUTE CALLED FOR ORDER {order_id}")
-    
-    milestones = execute(
-        "SELECT milestone_id, milestone_name, status FROM order_milestones WHERE order_id = %s",
-        (order_id,)
-    )
-    
-    result = f"<h1>Debug for Order {order_id}</h1>"
-    if milestones:
-        for m in milestones:
-            result += f"<p>ID: {m.get('milestone_id')}, Name: {m.get('milestone_name')}, Status: {m.get('status')}</p>"
-    else:
-        result += "<p>No milestones found</p>"
-    
-    return result
+
+@app.route("/order/<int:order_id>")
+def view_order(order_id):
+    # Just redirect to the blueprint route
+    return redirect(url_for("shop.view_order", order_id=order_id))
+
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)

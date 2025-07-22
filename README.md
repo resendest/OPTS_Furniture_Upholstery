@@ -50,3 +50,95 @@ The system supports role-based access, milestone customization, QR code scanning
 - Edit the master milestone list in `app.py` (or move to DB for dynamic management).
 - Only selected milestones are saved per order and shown on scan/detail pages.
 
+## Deployment Instructions
+
+
+**Option 1: GitHub Deployment (Recommended)**
+- Best for production use
+- Automatic updates and version control
+- Direct integration with Render hosting
+
+**Option 2: Zip File Deployment**
+- If you received this project as a zip file
+- Requires uploading to GitHub first
+- See "Zip File Setup" section below
+
+### Quick Start (Render Hosting)
+
+This application is designed to deploy easily on **Render** (render.com), which provides reliable web hosting with PostgreSQL database support.
+
+#### Step 1: Create Render Account
+1. Go to [render.com](https://render.com) and create an account
+2. Connect your GitHub account to Render
+
+#### Step 2: Prepare Your Repository
+- **If using GitHub:** Fork this repository to your account
+- **If using zip file:** Follow "Zip File Setup" instructions below first
+
+#### Step 3: Deploy the Application
+1. In Render dashboard, click **"New +"** → **"Web Service"**
+2. Connect your GitHub repository
+3. Configure the service:
+   - **Name:** `opts-lousso-designs` (or your preferred name)
+   - **Environment:** `Python 3`
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `gunicorn app:app`
+   - **Plan:** Start with **Free** for testing, upgrade to **Pro Standard** for production
+
+#### Step 4: Add PostgreSQL Database
+1. In Render dashboard, click **"New +"** → **"PostgreSQL"**
+2. Choose **Free** for testing or **Pro Standard** for production
+3. Note the **Internal Database URL** (starts with `postgresql://`)
+
+#### Step 5: Configure Environment Variables
+In your web service settings, add these environment variables:
+
+**Required:**
+- `SECRET_KEY` = Generate a secure random string (32+ characters)
+- `DATABASE_URL` = Your PostgreSQL Internal Database URL from Step 4
+- `BASE_URL` = Your app URL
+
+**Email Configuration (for notifications):**
+- `EMAIL_HOST` = `smtp.gmail.com`
+- `EMAIL_PORT` = `587`
+- `EMAIL_USE_TLS` = `true`
+- `EMAIL_USERNAME` = Your business Gmail address
+- `EMAIL_PASSWORD` = Gmail App Password (not regular password)
+- `EMAIL_DEFAULT_SENDER` = Your business Gmail address
+
+**Note:** The `BASE_URL` should match your deployed app's URL. Render will assign this when you create the service.
+
+#### Step 6: Initialize Database
+1. Connect to your PostgreSQL database using the External Database URL
+2. Run the SQL schema file: `sql/v3_lousso_opts_schema.sql`
+3. Create your first staff account through the registration page
+
+#### Step 7: Create First Admin Account
+
+**Option A: Use Admin Setup Page (Recommended)**
+1. Visit your deployed app URL + `/admin_setup` (e.g., `https://your-app.onrender.com/admin_setup`)
+2. Fill out the form to create your first admin account
+3. Log in with your new admin credentials
+4. This route automatically disables itself after the first admin is created
+
+**After Initial Setup:**
+- Use the staff registration feature to add additional staff members
+
+### Zip File Setup
+
+If you received this as a zip file and want to deploy:
+
+#### Step 1: Extract and Upload to GitHub
+1. **Extract the zip file** to your computer
+2. **Create a new repository** on [GitHub](https://github.com)
+3. **Upload all files** to your new GitHub repository:
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial OPTS deployment"
+   git remote add origin https://github.com/yourusername/opts-deployment.git
+   git push -u origin main
+   ```
+
+
+

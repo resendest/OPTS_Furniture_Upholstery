@@ -10,18 +10,29 @@ from psycopg2.extras import RealDictCursor
 
 load_dotenv()
 
-# Database connection pool settings
+# For Render deployment - use DATABASE_URL if available
+database_url = os.getenv("DATABASE_URL")
 
-_pool = SimpleConnectionPool(
-    minconn=int(os.getenv("DB_MIN_CONN", 1)),
-    maxconn=int(os.getenv("DB_MAX_CONN", 5)),
-    dbname=os.getenv("DB_NAME"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD"),
-    host=os.getenv("DB_HOST", "127.0.0.1"),
-    port=os.getenv("DB_PORT", "5432"),
-    cursor_factory=RealDictCursor,
-)
+if database_url:
+    # Production: Use DATABASE_URL (Render provides this)
+    _pool = SimpleConnectionPool(
+        minconn=1,
+        maxconn=3,  # Reduced for free tier
+        dsn=database_url,
+        cursor_factory=RealDictCursor,
+    )
+else:
+    # Development: Use individual environment variables
+    _pool = SimpleConnectionPool(
+        minconn=int(os.getenv("DB_MIN_CONN", 1)),
+        maxconn=int(os.getenv("DB_MAX_CONN", 5)),
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST", "127.0.0.1"),
+        port=os.getenv("DB_PORT", "5432"),
+        cursor_factory=RealDictCursor,
+    )
 # execution context for the connection pool
 
 def execute(sql: str, params: tuple = ()):
