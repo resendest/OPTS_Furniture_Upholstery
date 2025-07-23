@@ -678,6 +678,16 @@ def debug_pdf_data(order_id):
     return f"Order {order_id} product codes: {product_codes}"
 
 
+@app.route("/debug/url_test/<order_id>")
+def debug_url_test(order_id):
+    order = execute("SELECT lousso_pdf_path FROM orders WHERE order_id = %s", (order_id,))
+    if order:
+        path = order[0]['lousso_pdf_path']
+        return f"Database path: {path}<br>Full URL would be: https://opts-furniture-upholstery.onrender.com{path}"
+    else:
+        return "Order not found"
+
+
 # run the app
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
