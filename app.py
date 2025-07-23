@@ -642,6 +642,32 @@ def debug_work_orders():
     else:
         return f"Work orders directory NOT found at: {work_orders_path}"
 
+@app.route("/debug/order_paths")
+def debug_order_paths():
+    orders = execute("SELECT order_id, lousso_pdf_path, client_pdf_path FROM orders WHERE lousso_pdf_path IS NOT NULL", ())
+    if orders:
+        result = "<h3>Order PDF Paths in Database:</h3>"
+        for order in orders:
+            result += f"Order {order['order_id']}: <br>"
+            result += f"&nbsp;&nbsp;Lousso PDF: {order['lousso_pdf_path']}<br>"
+            result += f"&nbsp;&nbsp;Client PDF: {order['client_pdf_path']}<br><br>"
+        return result
+    else:
+        return "No orders with PDF paths found"
+
+@app.route("/debug/check_file/<order_id>")
+def check_file(order_id):
+    import os
+    work_orders_path = os.path.join(os.path.dirname(__file__), "static", "work_orders")
+    file1 = os.path.join(work_orders_path, f"lousso_tyler_resendes_order_{order_id}.pdf")
+    file2 = os.path.join(work_orders_path, f"client_tyler_resendes_order_{order_id}.pdf")
+    
+    result = f"Checking files for order {order_id}:<br>"
+    result += f"Lousso PDF exists: {os.path.exists(file1)}<br>"
+    result += f"Client PDF exists: {os.path.exists(file2)}<br>"
+    result += f"Directory contents: {os.listdir(work_orders_path)}"
+    
+    return result
 
 
 # run the app
