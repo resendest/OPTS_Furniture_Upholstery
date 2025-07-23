@@ -8,6 +8,11 @@
 static/qr/
 static/work_orders/
 
+# Ignore these folders, files, and their contents:
+__pycache__/
+*.pyc
+.DS_Store
+
 
 # But allow these important static files:
 # static/images/    ← Don't ignore this!

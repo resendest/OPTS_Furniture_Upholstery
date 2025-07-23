@@ -633,51 +633,6 @@ def admin_setup():
     return render_template("admin_setup.html")
 
 
-@app.route("/init_db")
-def init_db():
-    try:
-        # Read and execute actual schema file
-        schema_path = os.path.join(os.path.dirname(__file__), 'sql', 'v3_lousso_opts_schema.sql')
-        
-        with open(schema_path, 'r', encoding='utf-8') as f:
-            schema_content = f.read()
-        
-        # Remove problematic lines and split into statements
-        lines = schema_content.split('\n')
-        filtered_lines = []
-        
-        for line in lines:
-            # Skip comments, empty lines, and problematic statements
-            if (line.strip().startswith('--') or 
-                line.strip() == '' or
-                'ALTER FUNCTION' in line or
-                'ALTER TABLE' in line.upper() and 'OWNER TO' in line.upper() or
-                'ALTER SEQUENCE' in line.upper() and 'OWNER TO' in line.upper() or
-                line.strip().startswith('SET ') or
-                'TOC entry' in line):
-                continue
-            filtered_lines.append(line)
-        
-        # Join back and split by semicolons
-        clean_schema = '\n'.join(filtered_lines)
-        statements = [stmt.strip() for stmt in clean_schema.split(';') if stmt.strip()]
-        
-        executed_count = 0
-        for statement in statements:
-            if statement and not statement.startswith('--'):
-                try:
-                    execute(statement + ';', ())
-                    executed_count += 1
-                except Exception as e:
-                    # Log but continue - some statements might already exist
-                    app.logger.warning(f"Statement failed (continuing): {e}")
-        
-        return f"Database schema initialized successfully!<br>Executed {executed_count} statements.<br><br><a href='/admin_setup'>Now create your admin account →</a>"
-        
-    except FileNotFoundError:
-        return "Schema file not found. Make sure sql/v3_lousso_opts_schema.sql exists."
-    except Exception as e:
-        return f"Error initializing database: {e}"
 
 # run the app
 if __name__ == "__main__":
