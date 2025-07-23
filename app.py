@@ -687,6 +687,13 @@ def debug_url_test(order_id):
     else:
         return "Order not found"
 
+@app.route("/debug/routes")
+def debug_routes():
+    routes = []
+    for rule in app.url_map.iter_rules():
+        routes.append(f"{rule.endpoint}: {rule.rule}")
+    return "<br>".join(sorted(routes))
+
 
 # run the app
 if __name__ == "__main__":
