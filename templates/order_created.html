@@ -17,7 +17,7 @@
   {% if order.lousso_pdf_path %}
     <div style="margin-bottom: 1rem;">
       <a
-        href="{{ url_for('work_orders', filename=order.lousso_pdf_path | replace('static/work_orders/', '') ) }}"
+        href="{{ order.lousso_pdf_path }}"
         target="_blank"
         style="
           display: inline-block;

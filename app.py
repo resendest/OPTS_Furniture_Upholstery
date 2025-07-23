@@ -669,6 +669,14 @@ def check_file(order_id):
     
     return result
 
+@app.route("/debug/pdf_data/<order_id>")
+def debug_pdf_data(order_id):
+    # Get the product codes for this order
+    items = execute("SELECT product_code FROM order_items WHERE order_id = %s", (order_id,))
+    product_codes = [item["product_code"] for item in items] if items else []
+    
+    return f"Order {order_id} product codes: {product_codes}"
+
 
 # run the app
 if __name__ == "__main__":
