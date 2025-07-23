@@ -15,7 +15,7 @@ from flask import (
     Flask, request, render_template,
     redirect, url_for, flash,
     send_from_directory, current_app,
-    session, g
+    session, g, send_file
 )
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -631,6 +631,16 @@ def admin_setup():
             return render_template("admin_setup.html")
     
     return render_template("admin_setup.html")
+
+@app.route("/debug/work_orders")
+def debug_work_orders():
+    import os
+    work_orders_path = os.path.join(os.path.dirname(__file__), "static", "work_orders")
+    if os.path.exists(work_orders_path):
+        files = os.listdir(work_orders_path)
+        return f"Work orders directory exists<br>Files: {files}"
+    else:
+        return f"Work orders directory NOT found at: {work_orders_path}"
 
 
 
