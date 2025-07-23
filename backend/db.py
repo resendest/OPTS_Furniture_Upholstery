@@ -4,6 +4,7 @@
 # make sure to install psycopg2 and python-dotenv for this to work (see requirements.txt)
 import os
 import logging
+import urllib.parse
 from dotenv import load_dotenv
 from psycopg2.pool import SimpleConnectionPool
 from psycopg2.extras import RealDictCursor
@@ -14,7 +15,11 @@ load_dotenv()
 database_url = os.getenv("DATABASE_URL")
 
 if database_url:
-    # Production: Use DATABASE_URL (Render provides this)
+    # Production: Use Render's DATABASE_URL
+    # Parse the URL and add SSL if not present
+    if '?sslmode=' not in database_url:
+        database_url += '?sslmode=require'
+    
     _pool = SimpleConnectionPool(
         minconn=1,
         maxconn=3,  # Reduced for free tier
