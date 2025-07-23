@@ -694,6 +694,23 @@ def debug_routes():
         routes.append(f"{rule.endpoint}: {rule.rule}")
     return "<br>".join(sorted(routes))
 
+@app.route("/debug/pdf_test/<order_id>")
+def debug_pdf_test(order_id):
+    # Get the product codes
+    items = execute("SELECT product_code FROM order_items WHERE order_id = %s", (order_id,))
+    product_codes = [item["product_code"] for item in items] if items else []
+    
+    # Test the join operation
+    joined_codes = ", ".join(product_codes)
+    
+    return f"""
+    Order {order_id} Debug:<br>
+    Raw product codes: {product_codes}<br>
+    Joined codes: '{joined_codes}'<br>
+    Length: {len(joined_codes)}<br>
+    Is empty: {not joined_codes}
+    """
+
 
 # run the app
 if __name__ == "__main__":
