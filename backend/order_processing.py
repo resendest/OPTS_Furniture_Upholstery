@@ -56,11 +56,10 @@ def make_work_order_pdf(
     c.drawRightString(w - margin, y, f"Date: {date_str}")
     y -= 0.3 * inch
 
-    # Information table with better formatting
+    # Main information table (without product codes)
     data = [
         ["Client", client_name, "Invoice #", invoice_no],
-        ["Product Codes", ", ".join(product_codes) if product_codes else "None", "Quantity", str(quantity)],
-        ["Repair/Glue", repair_req, "", ""],
+        ["Quantity", str(quantity), "Repair/Glue", repair_req],
         ["Back Style", upholstery.get("back", ""), "Seat Style", upholstery.get("seat", "")],
         ["New Back Insert", inserts.get("back", ""), "New Seat Insert", inserts.get("seat", "")],
         ["Back Insert Type", insert_types.get("back", ""), "Seat Insert Type", insert_types.get("seat", "")],
@@ -70,7 +69,7 @@ def make_work_order_pdf(
         ["Fabric Specs", fabric_specs or "", "Initials", initials or ""],
     ]
 
-    # Increase column widths to accommodate product codes
+    # Main information table
     table = Table(data, colWidths=[1.5*inch, 2.5*inch, 1.5*inch, 2.5*inch])
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
@@ -79,11 +78,32 @@ def make_work_order_pdf(
         ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("ROWBACKGROUNDS", (0, 0), (-1, -1), [colors.white, colors.lightgrey] * 10),  # Alternating row colors
+        ("ROWBACKGROUNDS", (0, 0), (-1, -1), [colors.white, colors.lightgrey] * 10),
     ]))
     tw, th = table.wrap(w - 2*margin, h)
     table.drawOn(c, margin, y - th)
     y -= th + 0.2 * inch
+
+    # Separate Product Codes Table
+    if product_codes:
+        product_code_data = [
+            ["Product Codes", ", ".join(product_codes)]
+        ]
+        
+        product_table = Table(product_code_data, colWidths=[1.5*inch, 6.5*inch])
+        product_table.setStyle(TableStyle([
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
+            ("BACKGROUND", (0, 0), (-1, -1), colors.lightyellow),  # Light yellow background
+            ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),      # Bold label
+            ("FONTNAME", (1, 0), (-1, -1), "Helvetica"),          # Regular text
+            ("FONTSIZE", (0, 0), (-1, -1), 11),                   # Slightly larger font
+            ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+        ]))
+        ptw, pth = product_table.wrap(w - 2*margin, h)
+        product_table.drawOn(c, margin, y - pth)
+        y -= pth + 0.2 * inch
 
     # Notes section
     c.setFont("Helvetica-Bold", 12)
