@@ -591,14 +591,6 @@ def view_order(order_id):
     # Just redirect to the blueprint route
     return redirect(url_for("shop.view_order", order_id=order_id))
 
-# run the app
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=False, host="0.0.0.0", port=port)
-
-from werkzeug.security import generate_password_hash
-from datetime import datetime
-
 @app.route("/admin_setup", methods=["GET", "POST"])
 def admin_setup():
     # Check if any staff users already exist
@@ -639,3 +631,10 @@ def admin_setup():
             return render_template("admin_setup.html")
     
     return render_template("admin_setup.html")
+
+# run the app
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)
+
+
