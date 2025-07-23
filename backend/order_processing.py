@@ -137,6 +137,10 @@ def create_order(
     topcoat: str | None,
     customer_initials: str | None,
 ) -> dict:
+    
+    # Ensure work orders directory exists and is writable
+    WORK_DIR.mkdir(parents=True, exist_ok=True) 
+    
     # Lookup or create customer
     cust_rows = execute(
         "SELECT customer_id FROM customers WHERE email=%s",
