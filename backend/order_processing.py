@@ -27,6 +27,7 @@ def make_work_order_pdf(
     client_name: str,
     invoice_no: str,
     quantity: int,
+    product_codes: list[str],
     item_images: list[str],
     fabric_inside: list[str],
     fabric_outside: list[str],
@@ -58,7 +59,8 @@ def make_work_order_pdf(
     # Information table
     data = [
         ["Client", client_name, "Invoice #", invoice_no],
-        ["Quantity", str(quantity), "Repair/Glue", repair_req],
+        ["Product Codes", ", ".join(product_codes), "Quantity", str(quantity)],
+        ["Repair/Glue", repair_req, "", ""],
         ["Back Style", upholstery.get("back", ""), "Seat Style", upholstery.get("seat", "")],
         ["New Back Insert", inserts.get("back", ""), "New Seat Insert", inserts.get("seat", "")],
         ["Back Insert Type", insert_types.get("back", ""), "Seat Insert Type", insert_types.get("seat", "")],
@@ -201,6 +203,7 @@ def create_order(
     internal_pdf = WORK_DIR / f"lousso_{slug}_order_{order_id}.pdf"
     make_work_order_pdf(
         internal_pdf, order_id, name, invoice_no, quantity,
+        product_codes, 
         [], [], [], "Yes" if repair_glue else "No",
         fabric_specs or "", upholstery, inserts_dict, insert_types,
         trim_dict, finish_dict, notes or "", customer_initials or "",
@@ -209,6 +212,7 @@ def create_order(
     client_pdf = WORK_DIR / f"client_{slug}_order_{order_id}.pdf"
     make_work_order_pdf(
         client_pdf, order_id, name, invoice_no, quantity,
+        product_codes, 
         [], [], [], "Yes" if repair_glue else "No",
         fabric_specs or "", upholstery, inserts_dict, insert_types,
         trim_dict, finish_dict, notes or "", customer_initials or "",
