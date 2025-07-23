@@ -56,10 +56,10 @@ def make_work_order_pdf(
     c.drawRightString(w - margin, y, f"Date: {date_str}")
     y -= 0.3 * inch
 
-    # Information table
+    # Information table with better formatting
     data = [
         ["Client", client_name, "Invoice #", invoice_no],
-        ["Product Codes", ", ".join(product_codes), "Quantity", str(quantity)],
+        ["Product Codes", ", ".join(product_codes) if product_codes else "None", "Quantity", str(quantity)],
         ["Repair/Glue", repair_req, "", ""],
         ["Back Style", upholstery.get("back", ""), "Seat Style", upholstery.get("seat", "")],
         ["New Back Insert", inserts.get("back", ""), "New Seat Insert", inserts.get("seat", "")],
@@ -69,7 +69,9 @@ def make_work_order_pdf(
         ["Finish Specs", finish.get("specs", ""), "Topcoat", finish.get("topcoat", "")],
         ["Fabric Specs", fabric_specs or "", "Initials", initials or ""],
     ]
-    table = Table(data, colWidths=[1.2*inch, 2.3*inch, 1.2*inch, 2.3*inch])
+
+    # Increase column widths to accommodate product codes
+    table = Table(data, colWidths=[1.5*inch, 2.5*inch, 1.5*inch, 2.5*inch])
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
@@ -77,6 +79,7 @@ def make_work_order_pdf(
         ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
         ("FONTSIZE", (0, 0), (-1, -1), 10),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("ROWBACKGROUNDS", (0, 0), (-1, -1), [colors.white, colors.lightgrey] * 10),  # Alternating row colors
     ]))
     tw, th = table.wrap(w - 2*margin, h)
     table.drawOn(c, margin, y - th)
