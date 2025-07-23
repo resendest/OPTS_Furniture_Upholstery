@@ -6,8 +6,8 @@
 
 # Only ignore generated files in static, not the whole folder
 static/qr/
-static/pdfs/
-static/uploads/
+static/work_orders/
+
 
 # But allow these important static files:
 # static/images/    ← Don't ignore this!
