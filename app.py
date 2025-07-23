@@ -595,3 +595,47 @@ def view_order(order_id):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
+
+from werkzeug.security import generate_password_hash
+from datetime import datetime
+
+@app.route("/admin_setup", methods=["GET", "POST"])
+def admin_setup():
+    # Check if any staff users already exist
+    existing_staff = execute(
+        "SELECT COUNT(*) as count FROM customers WHERE is_staff = TRUE",
+        ()
+    )
+    
+    if existing_staff and existing_staff[0]["count"] > 0:
+        flash("Admin setup is no longer available. Staff accounts already exist.", "info")
+        return redirect(url_for("login"))
+    
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+        
+        # Validation
+        if not all([name, email, password]):
+            flash("All fields are required.", "danger")
+            return render_template("admin_setup.html")
+        
+        if len(password) < 8:
+            flash("Password must be at least 8 characters.", "danger")
+            return render_template("admin_setup.html")
+        
+        # Create the first admin user
+        password_hash = generate_password_hash(password)
+        try:
+            execute(
+                "INSERT INTO customers (name, email, password_hash, is_staff, registered_at) VALUES (%s, %s, %s, TRUE, %s)",
+                (name, email, password_hash, datetime.utcnow())
+            )
+            flash("Admin account created successfully! You can now log in.", "success")
+            return redirect(url_for("login"))
+        except Exception as e:
+            flash("Error creating admin account. Email may already be in use.", "danger")
+            return render_template("admin_setup.html")
+    
+    return render_template("admin_setup.html")

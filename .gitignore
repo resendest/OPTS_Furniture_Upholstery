@@ -1,10 +1,15 @@
 # Ignore the .env file containing sensitive information
 .env
 
-# Ignore the static folder and all its contents
-/static/
-
 # Ignore the tests folder and all its contents
 /tests/
 
+# Only ignore generated files in static, not the whole folder
+static/qr/
+static/pdfs/
+static/uploads/
 
+# But allow these important static files:
+# static/images/    ← Don't ignore this!
+# static/css/       ← Don't ignore this!
+# static/js/        ← Don't ignore this!
