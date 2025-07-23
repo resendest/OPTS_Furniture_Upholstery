@@ -90,13 +90,13 @@ def make_work_order_pdf(
             ["Product Codes", ", ".join(product_codes)]
         ]
         
-        product_table = Table(product_code_data, colWidths=[1.5*inch, 6.5*inch])
+        product_table = Table(product_code_data, colWidths=[1.2*inch, 5*inch])
         product_table.setStyle(TableStyle([
             ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
-            ("BACKGROUND", (0, 0), (-1, -1), colors.lightyellow),  # Light yellow background
-            ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),      # Bold label
-            ("FONTNAME", (1, 0), (-1, -1), "Helvetica"),          # Regular text
-            ("FONTSIZE", (0, 0), (-1, -1), 11),                   # Slightly larger font
+            ("BACKGROUND", (0, 0), (-1, -1), colors.lightyellow),  
+            ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),      
+            ("FONTNAME", (1, 0), (-1, -1), "Helvetica"),          
+            ("FONTSIZE", (0, 0), (-1, -1), 11),                   
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ("LEFTPADDING", (0, 0), (-1, -1), 8),
             ("RIGHTPADDING", (0, 0), (-1, -1), 8),
