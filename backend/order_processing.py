@@ -224,8 +224,8 @@ def create_order(
         "UPDATE orders SET qr_path=%s, lousso_pdf_path=%s, client_pdf_path=%s WHERE order_id=%s",
         (
             qr_url,
-            f"/static/work_orders/{internal_pdf.name}",
-            f"/static/work_orders/{client_pdf.name}",
+            f"/work_orders/{internal_pdf.name}",
+            f"/work_orders/{client_pdf.name}",
             order_id
         )
     )
