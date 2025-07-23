@@ -70,7 +70,7 @@ def make_work_order_pdf(
     ]
 
     # Main information table
-    table = Table(data, colWidths=[1.5*inch, 2.5*inch, 1.5*inch, 2.5*inch])
+    table = Table(data, colWidths=[1.5*inch, 2.3*inch, 1.5*inch, 2.3*inch])
     table.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
         ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
@@ -90,7 +90,7 @@ def make_work_order_pdf(
             ["Product Codes", ", ".join(product_codes)]
         ]
         
-        product_table = Table(product_code_data, colWidths=[1.2*inch, 5*inch])
+        product_table = Table(product_code_data, colWidths=[1.5*inch, 5*inch])
         product_table.setStyle(TableStyle([
             ("GRID", (0, 0), (-1, -1), 0.5, colors.black),
             ("BACKGROUND", (0, 0), (-1, -1), colors.lightyellow),  
