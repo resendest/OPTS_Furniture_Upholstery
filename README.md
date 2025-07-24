@@ -91,7 +91,7 @@ This application is designed to deploy easily on **Render** (render.com), which 
    - **Region:** Choose closest to your location (Ohio is used for Eastern US)
 3. Click **"Create Database"**
 4. **IMPORTANT:** Copy the **Internal Database URL** from the database info page
-   - It will look like: `postgresql://username:password@hostname/database_name`
+   - It will look like: `postgresql://username:password@hostname/database_name/...`
    - **Save this URL!** - you'll need it in the next step
 
 #### Step 4: Deploy the Web Application
