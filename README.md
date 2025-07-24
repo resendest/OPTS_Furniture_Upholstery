@@ -93,6 +93,7 @@ This application is designed to deploy easily on **Render** (render.com), which 
 4. **IMPORTANT:** Copy the **Internal Database URL** from the database info page
    - It will look like: `postgresql://username:password@hostname/database_name/...`
    - **Save this URL!** - you'll need it in the next step
+5. Save this under a project, as you'll need to combine your database and web service in the same project.
 
 #### Step 4: Deploy the Web Application
 1. In Render dashboard, click **"New +"** → **"Web Service"**
@@ -122,13 +123,6 @@ This application is designed to deploy easily on **Render** (render.com), which 
 - `EMAIL_PASSWORD` = Gmail App Password (not regular password, find in your Google Workspace account settings)
 - `EMAIL_DEFAULT_SENDER` = "Add Name <add_name@addemail.com>"
 
-#### Step 6: Deploy and Initialize
-1. Click **"Create Web Service"**
-2. Wait for deployment to complete (5-10 minutes)
-3. **The database schema will automatically initialize on first startup**
-4. **Copy your app's URL** from the Render dashboard
-5. **Update the BASE_URL environment variable** with this URL
-6. **Redeploy** the service (click "Manual Deploy" → "Deploy latest commit")
 
 #### Step 7: Create First Admin Account
 1. Visit your app URL + `/admin_setup` (e.g., `https://your-app-name.onrender.com/admin_setup`)
