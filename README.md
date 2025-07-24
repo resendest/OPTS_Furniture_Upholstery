@@ -71,13 +71,30 @@ This application is designed to deploy easily on **Render** (render.com), which 
 
 #### Step 1: Create Render Account
 1. Go to Render website (render.com) and create an account
-2. Connect your GitHub account to Render
+2. Connect your GitHub account to Render (create GitHub account if you do not already have one)
 
 #### Step 2: Prepare Your Repository
 - **If using GitHub:** Fork this repository to your account
 - **If using zip file:** Follow "Zip File Setup" instructions below first
 
-#### Step 3: Deploy the Application
+#### Extract ZIP File and Upload to GitHub
+1. **Extract the zip file** to your computer
+2. **Create a new repository** on [GitHub](https://github.com)
+3. **Upload all files** to your new GitHub repository:
+4. **Refer to step 2 under Quick Start**
+
+#### Step 3: Create PostgreSQL Database FIRST
+1. In Render dashboard, click **"New +"** → **"PostgreSQL"**
+2. Configure the database:
+   - **Name:** `opts-database` (or your preferred name)
+   - **Plan:** Choose **Free** for testing
+   - **Region:** Choose closest to your location (Ohio is used for Eastern US)
+3. Click **"Create Database"**
+4. **IMPORTANT:** Copy the **Internal Database URL** from the database info page
+   - It will look like: `postgresql://username:password@hostname/database_name`
+   - **Save this URL!** - you'll need it in the next step
+
+#### Step 4: Deploy the Web Application
 1. In Render dashboard, click **"New +"** → **"Web Service"**
 2. Connect your GitHub repository
 3. Configure the service:
@@ -85,61 +102,55 @@ This application is designed to deploy easily on **Render** (render.com), which 
    - **Environment:** `Python 3`
    - **Build Command:** `pip install -r requirements.txt`
    - **Start Command:** `gunicorn app:app`
-   - **Plan:** Start with **Free** for testing, upgrade to **Pro Standard** for production
+   - **Plan:** Choose **Free** for testing
 
-#### Step 4: Add PostgreSQL Database
-1. In Render dashboard, click **"New +"** → **"PostgreSQL"**
-2. Choose **Free** for testing or **Pro Standard** for production
-3. Note the **Internal Database URL** (starts with `postgresql://`)
+#### Step 5: Configure Environment Variables (BEFORE FIRST DEPLOY)
+**CRITICAL:** Add these environment variables BEFORE your first deployment:
 
-#### Step 5: Configure Environment Variables
-In your web service settings, add these environment variables:
+**Required (Must have these or app won't start):**
+- `DATABASE_URL` = **The Internal Database URL from Step 3**
+- `SECRET_KEY` = Generate a random 32+ character string
 
-**Required:**
-- `SECRET_KEY` = Generate a secure random string (32+ characters)
-- `DATABASE_URL` = Your PostgreSQL Internal Database URL from Step 4
-- `BASE_URL` = Your app URL
+**Your App URL (add after first deploy):**
+- `BASE_URL` = Your app's URL (Render will show this after deployment)
 
-**Email Configuration (for notifications):**
+**Email Configuration:**
 - `EMAIL_HOST` = `smtp.gmail.com`
 - `EMAIL_PORT` = `587`
 - `EMAIL_USE_TLS` = `true`
-- `EMAIL_USERNAME` = Your business Gmail address
-- `EMAIL_PASSWORD` = Gmail App Password (not regular password)
-- `EMAIL_DEFAULT_SENDER` = Your business Gmail address
+- `EMAIL_USERNAME` = Business Gmail Address
+- `EMAIL_PASSWORD` = Gmail App Password (not regular password, find in your Google Workspace account settings)
+- `EMAIL_DEFAULT_SENDER` = "Add Name <add_name@addemail.com>"
 
-**Note:** The `BASE_URL` should match your deployed app's URL. Render will assign this when you create the service.
+#### Step 6: Deploy and Initialize
+1. Click **"Create Web Service"**
+2. Wait for deployment to complete (5-10 minutes)
+3. **The database schema will automatically initialize on first startup**
+4. **Copy your app's URL** from the Render dashboard
+5. **Update the BASE_URL environment variable** with this URL
+6. **Redeploy** the service (click "Manual Deploy" → "Deploy latest commit")
 
-#### Step 6: Initialize Database
-1. Connect to your PostgreSQL database using the External Database URL
-2. Run the SQL schema file: `sql/v3_lousso_opts_schema.sql`
-3. Create your first staff account through the registration page
+#### Step 7: Create First Admin Account
+1. Visit your app URL + `/admin_setup` (e.g., `https://your-app-name.onrender.com/admin_setup`)
+2. Fill out the form to create your first admin account
+3. Log in and start creating orders!
 
 #### Step 7: Create First Admin Account
 
-**Option A: Use Admin Setup Page (Recommended)**
 1. Visit your deployed app URL + `/admin_setup` (e.g., `https://your-app.onrender.com/admin_setup`)
-2. Fill out the form to create your first admin account
+2. Fill out the form to create your first admin account credentials
 3. Log in with your new admin credentials
-4. This route automatically disables itself after the first admin is created
+4. This route automatically disables itself after the first admin is created.
 
 **After Initial Setup:**
 - Use the staff registration feature to add additional staff members
 
-### Zip File Setup
+### Notes for Professors
 
-If you received this as a zip file and want to deploy:
-
-#### Extract and Upload to GitHub
-1. **Extract the zip file** to your computer
-2. **Create a new repository** on [GitHub](https://github.com)
-3. **Upload all files** to your new GitHub repository:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial OPTS deployment"
-   git remote add origin https://github.com/yourusername/opts-deployment.git
-   git push -u origin main
-4. **Refer to step 2 under Quick Start**
+**Render Free Tier**
+- **Database:** 90 day limit, then deletes.
+- **Web Service:** Sleeps after 15 minutes of inactivity. **You may need to wait up to 2 minutes for the service to reload.**
+- **Storage:** Static PDF and QR files get deleted after every redeploy. Please only deploy once.
+- **Grading:** The free tier is perfect for evaluation. You can create test orders and view them in the dashboard. 
 
 
