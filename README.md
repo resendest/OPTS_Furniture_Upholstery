@@ -101,7 +101,7 @@ This application is designed to deploy easily on **Render** (render.com), which 
 1. **Enable 2-Factor Authentication** on your Gmail account (required for App Passwords)
 2. **Generate Gmail App Password:**
    - Go to [Google Account Settings](https://myaccount.google.com/)
-   - Navigate to **Security** → **2-Step Verification** → **App passwords**
+   - Once logged in, search for **App Passwords (Security)**
    - Generate a new app password for "Mail"
    - **Save this 16-character password** - you'll need it for EMAIL_PASSWORD
 3. **Note your Gmail address** - you'll need it for EMAIL_USERNAME and EMAIL_DEFAULT_SENDER
