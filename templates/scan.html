@@ -5,7 +5,7 @@
 {% block content %}
 <div class="scan-card">
   
-  <p><strong>Invoice #:</strong> {{ invoice_no }}</p>    <!-- added invoice -->
+  <p><strong>Invoice #:</strong> {{ invoice_no }}</p> 
 
   <div class="current">
     {% set ns = namespace(next_milestone=None) %}
@@ -14,14 +14,9 @@
         {% set ns.next_milestone = m %}
       {% endif %}
     {% endfor %}
+    
     {% if ns.next_milestone %}
-      {% set idx = milestones.index(ns.next_milestone) %}
-      {% if idx > 0 %}
-        {% set current = milestones[idx-1] %}
-        Your order is in <strong>{{ current.milestone_name }}</strong>
-      {% else %}
-        Your order has <strong>not started</strong>
-      {% endif %}
+      <p><strong>Next milestone to complete:</strong> {{ ns.next_milestone.milestone_name }}</p>
     {% else %}
       <span class="text-success">All milestones completed!</span>
     {% endif %}
