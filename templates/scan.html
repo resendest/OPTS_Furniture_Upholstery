@@ -35,7 +35,10 @@
           <option value="" disabled selected>-- Select milestone --</option>
           {% for m in milestones %}
             {% if not m.is_approved %}
-              <option value="{{ m.milestone_id }}">{{ m.milestone_name }}</option>
+              <option value="{{ m.milestone_id }}">
+                {{ m.milestone_name }} 
+                <span class="text-muted">({{ m.status }})</span>
+              </option>
             {% endif %}
           {% endfor %}
         </select>

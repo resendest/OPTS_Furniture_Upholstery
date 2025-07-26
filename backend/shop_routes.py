@@ -19,7 +19,7 @@ def scan_order(order_id):
         abort(404)
     invoice_no = rows[0]["invoice_no"]
 
-    # 2) Fetch milestones
+    # 2) Fetch milestones with CURRENT status (not cached)
     milestones = execute(
         """
         SELECT milestone_id,
