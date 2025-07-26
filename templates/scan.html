@@ -14,9 +14,14 @@
         {% set ns.next_milestone = m %}
       {% endif %}
     {% endfor %}
-    
     {% if ns.next_milestone %}
-      <p><strong>Next milestone to complete:</strong> {{ ns.next_milestone.milestone_name }}</p>
+      {% set idx = milestones.index(ns.next_milestone) %}
+      {% if idx > 0 %}
+        {% set current = milestones[idx-1] %}
+        Your order is in <strong>{{ current.milestone_name }}</strong>
+      {% else %}
+        Your order has <strong>not started</strong>
+      {% endif %}
     {% else %}
       <span class="text-success">All milestones completed!</span>
     {% endif %}
