@@ -120,6 +120,7 @@ This application is designed to deploy easily on **Render** (render.com), which 
 - **EMAIL_USERNAME:** Your Gmail address
 - **EMAIL_PASSWORD:** Your Gmail App Password (16 characters, no spaces)
 - **EMAIL_DEFAULT_SENDER:** Display name and email like `"Your Business <yourbusiness.orders@gmail.com>"`
+
 **It is important to ensure that EMAIL_USERNAME and EMAIL_DEFAULT_SENDER have the same e-mail address.**
 
 **Important:** Regular Gmail passwords will NOT work - you must use App Passwords
