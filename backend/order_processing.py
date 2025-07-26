@@ -39,6 +39,7 @@ def make_work_order_pdf(
     trim: dict,
     finish: dict,
     notes: str,
+    initials: str,
     qr_path: str | None,
 ):
     # Create a PDF canvas for the work order
@@ -65,7 +66,7 @@ def make_work_order_pdf(
         ["Trim Style", trim.get("style", ""), "Placement", trim.get("placement", "")],
         ["Vendor Color", trim.get("vendor", ""), "Frame Finish", finish.get("type", "")],
         ["Finish Specs", finish.get("specs", ""), "Topcoat", finish.get("topcoat", "")],
-        ["Fabric Specs", fabric_specs or ""],
+        ["Fabric Specs", fabric_specs or "", "Initials", initials or ""],
     ]
 
     # Main information table
@@ -156,7 +157,8 @@ def create_order(
     vendor_color: str | None,
     frame_finish: str | None,
     specs_text: str | None,
-    topcoat: str | None
+    topcoat: str | None,
+    customer_initials: str | None,
 ) -> dict:
     
     # Ensure work orders directory exists and is writable
@@ -202,7 +204,8 @@ def create_order(
             order_id, quantity, repair_glue, replace_springs,
             back_style, seat_style, new_back_insert, new_seat_insert,
             back_insert_type, seat_insert_type, trim_style, placement,
-            fabric_specs, vendor_color, frame_finish, specs, topcoat
+            fabric_specs, vendor_color, frame_finish, specs, topcoat,
+            customer_initials
         ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """,
         (
@@ -210,7 +213,7 @@ def create_order(
             back_style, seat_style, new_back_insert, new_seat_insert,
             back_insert_type, seat_insert_type, trim_style, placement,
             fabric_specs, vendor_color, frame_finish, specs_text,
-            topcoat
+            topcoat, customer_initials,
         )
     )
 
@@ -230,7 +233,8 @@ def create_order(
         product_codes, 
         [], [], [], "Yes" if repair_glue else "No",
         fabric_specs or "", upholstery, inserts_dict, insert_types,
-        trim_dict, finish_dict, notes or "", qr_path=qr_url
+        trim_dict, finish_dict, notes or "", customer_initials or "",
+        qr_path=qr_url
     )
     client_pdf = WORK_DIR / f"client_{slug}_order_{order_id}.pdf"
     make_work_order_pdf(
@@ -238,7 +242,8 @@ def create_order(
         product_codes, 
         [], [], [], "Yes" if repair_glue else "No",
         fabric_specs or "", upholstery, inserts_dict, insert_types,
-        trim_dict, finish_dict, notes or "", qr_path=None
+        trim_dict, finish_dict, notes or "", customer_initials or "",
+        qr_path=None
     )
 
     # Update order record with PDF & QR paths
