@@ -15,7 +15,7 @@ from flask import (
     Flask, request, render_template,
     redirect, url_for, flash,
     send_from_directory, current_app,
-    session, g, send_file
+    session, g, send_file, abort
 )
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -588,8 +588,52 @@ def inject_milestone_choices():
 
 @app.route("/order/<int:order_id>")
 def view_order(order_id):
-    # Just redirect to the blueprint route
-    return redirect(url_for("shop.view_order", order_id=order_id))
+    # Get order details
+    order_rows = execute(
+        """
+        SELECT o.*, c.name as customer_name, c.email, c.phone 
+        FROM orders o 
+        JOIN customers c ON o.customer_id = c.customer_id 
+        WHERE o.order_id = %s
+        """, 
+        (order_id,)
+    )
+    if not order_rows:
+        abort(404)
+    order = order_rows[0]
+
+    # Get order specifications
+    specs_rows = execute(
+        "SELECT * FROM order_specs WHERE order_id = %s", 
+        (order_id,)
+    )
+    specs = specs_rows[0] if specs_rows else {}
+
+    # Get product codes
+    items = execute(
+        "SELECT product_code FROM order_items WHERE order_id = %s", 
+        (order_id,)
+    )
+    product_codes = [item["product_code"] for item in items] if items else []
+
+    # Get current milestone statuses
+    milestones = execute(
+        """
+        SELECT milestone_id, milestone_name, status, is_approved, is_client_action
+        FROM order_milestones 
+        WHERE order_id = %s 
+        ORDER BY milestone_id
+        """, 
+        (order_id,)
+    )
+
+    return render_template(
+        "order_detail.html", 
+        order=order, 
+        specs=specs, 
+        product_codes=product_codes,
+        milestones=milestones or []  # Make sure milestones is passed
+    )
 
 @app.route("/admin_setup", methods=["GET", "POST"])
 def admin_setup():
