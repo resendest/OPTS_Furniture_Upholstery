@@ -125,7 +125,7 @@ This application is designed to deploy easily on **Render** (render.com), which 
 
 **Important:** Regular Gmail passwords will NOT work - you must use App Passwords
 
-#### Step 5: Deploy the Web Application
+#### Step 5: Start Web Application Setup
 1. In Render dashboard, click **"New +"** → **"Web Service"**
 2. Connect your GitHub repository
 3. Configure the service:
@@ -134,28 +134,36 @@ This application is designed to deploy easily on **Render** (render.com), which 
    - **Build Command:** `pip install -r requirements.txt`
    - **Start Command:** `gunicorn app:app`
    - **Plan:** Choose **Free** for testing
+4. **STOP HERE - DO NOT CLICK "CREATE WEB SERVICE" YET**
 
-#### Step 6: Configure Environment Variables (BEFORE FIRST DEPLOY)
-**CRITICAL:** Add these environment variables BEFORE your first deployment:
+#### Step 6: Configure Environment Variables (BEFORE DEPLOYMENT)
+**CRITICAL:** Add these environment variables BEFORE clicking "Create Web Service":
 
 **Required Database & Security:**
 - `DATABASE_URL` = **The Internal Database URL from Step 3**
-- `SECRET_KEY` = Generate a random 32+ character string (Render can generate this)
+- `SECRET_KEY` = Generate a random 32+ character string (or let Render generate one)
 
-- See `.env.example` for the environment variable formats.
+**Required Email Configuration:**
+- See `.env.example` for all email environment variables
+- Use the credentials from Step 4
 
-#### Step 7: Complete Deployment
-1. Click **"Create Web Service"**
-2. Wait for deployment to complete (5-10 minutes)
-3. **The database schema will automatically initialize on first startup**
-4. **Copy your app's URL** from the Render dashboard
-5. **Update the BASE_URL environment variable** with this URL
-6. **Redeploy the service** (click "Manual Deploy" → "Deploy latest commit")
+**How to Add Environment Variables:**
+1. **Scroll down** to the "Advanced" section on the web service setup page
+2. **Click "Add Environment Variable"** for each one needed
+3. **Enter the variable name** and **paste the value**
+4. **Verify DATABASE_URL** matches exactly what you copied from Step 3
 
-#### Step 8: Create First Admin Account
-1. Visit your app URL + `/admin_setup` (e.g., `https://your-app-name.onrender.com/admin_setup`)
-2. Fill out the form to create your first admin account
-3. Log in and start creating orders!
-**Note** - once an admin account is created for your environment, this URL redirects back to the login page. 
+#### Step 7: Complete Deployment and Configure BASE_URL
+1. **After all environment variables are added**, click **"Create Web Service"**
+2. **Wait for initial deployment** to complete (5-10 minutes)
+3. **IMPORTANT:** The first deployment will work, but QR codes and emails will have incorrect URLs
+4. **Copy your app's URL** from the Render dashboard (e.g., `https://your-app-name.onrender.com`)
+5. **Go to Environment Variables** in your service settings
+6. **Add BASE_URL environment variable** with your app's URL (no trailing slash)
+7. **Click "Manual Deploy"** → **"Deploy latest commit"** to apply the BASE_URL setting
+8. **Wait for redeploy** to complete (3-5 minutes)
+9. **The database schema will automatically initialize on first startup**
+
+**Example BASE_URL:**
 
 
