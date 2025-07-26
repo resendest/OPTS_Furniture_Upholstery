@@ -9,23 +9,20 @@
 
   <div class="current">
     {% set ns = namespace(next_milestone=None) %}
-    {% for m in milestones %}
-      {% if not m.is_approved and not ns.next_milestone %}
-        {% set ns.next_milestone = m %}
-      {% endif %}
-    {% endfor %}
-    {% if ns.next_milestone %}
-      {% set idx = milestones.index(ns.next_milestone) %}
-      {% if idx > 0 %}
-        {% set current = milestones[idx-1] %}
-        Your order is in <strong>{{ current.milestone_name }}</strong>
-      {% else %}
-        Your order has <strong>not started</strong>
-      {% endif %}
-    {% else %}
-      <span class="text-success">All milestones completed!</span>
+     
+  {% for m in milestones %}
+    {% if (m.status != 'Completed' or not m.is_approved) and not ns.next_milestone %}
+      {% set ns.next_milestone = m %}
     {% endif %}
-  </div>
+  {% endfor %}
+  
+  {% if ns.next_milestone %}
+    <p><strong>Next milestone to complete:</strong> {{ ns.next_milestone.milestone_name }}</p>
+    <p><small>Current status: {{ ns.next_milestone.status }}</small></p>
+  {% else %}
+    <span class="text-success">All milestones completed!</span>
+  {% endif %}
+</div>
 
   {% if ns.next_milestone %}
     <form id="milestoneForm" onsubmit="submitMilestone(event)">
