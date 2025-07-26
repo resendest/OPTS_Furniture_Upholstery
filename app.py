@@ -548,7 +548,7 @@ def delete_order(order_id):
     execute("DELETE FROM order_milestones WHERE order_id=%s", (order_id,))
     # Then delete the order
     execute("DELETE FROM orders WHERE order_id=%s", (order_id,))
-    flash(f"Invoice #{invoice_no} has been deleted. This action cannot be reversed.", "success")
+    flash(f"Order deleted", "success")
     return redirect(url_for("portal"))
 
 @app.before_request
