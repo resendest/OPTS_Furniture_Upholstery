@@ -1,7 +1,6 @@
 **Order Processing and Tracking System (OPTS)**
 
-Created by Wentworth students Tyler Resendes and Samuel Gjencaj
-for their Summer 2025 MGMT 5510 - CIS Senior Capstone course.
+Created by Wentworth students Tyler Resendes and Samuel Gjencaj for their Summer 2025 MGMT 5510 - CIS Senior Capstone course.
 
 The OPTS is a web-based platform for Lousso Designs, a custom upholstery business in the Greater Boston area, to manage custom upholstery orders from creation to delivery.  
 The OPTS enables staff to create orders with project-specific milestones, track production progress, and generate work order PDFs.  
@@ -24,7 +23,7 @@ The system supports role-based access, milestone customization, QR code scanning
 ## Tech Stack
 
 - **Backend:** Python, Flask (framework)
-- **Frontend:** Jinja2 templates, Bootstrap
+- **Frontend:** HTML/CSS (Jinja2, Bootstrap), JavaScript
 - **Database:** PostgreSQL
 - **Application Server:** Gunicorn (production)
 - **Hosting Platform** Render (render.com)
@@ -65,7 +64,6 @@ The system supports role-based access, milestone customization, QR code scanning
 - Requires uploading to GitHub first
 - See "Zip File Setup" section below
 
-### Quick Start
 
 This application is designed to deploy easily on **Render** (render.com), which provides reliable web hosting with PostgreSQL database support.
 
@@ -95,7 +93,37 @@ This application is designed to deploy easily on **Render** (render.com), which 
    - **Save this URL!** - you'll need it in the next step
 5. Save this under a project, as you'll need to combine your database and web service in the same project.
 
-#### Step 4: Deploy the Web Application
+#### Step 4: Prepare Email Configuration
+
+**The application requires email configuration to send registration links to new users. You have two options:**
+
+##### Option A: Use Existing Gmail Account
+1. **Enable 2-Factor Authentication** on your Gmail account (required for App Passwords)
+2. **Generate Gmail App Password:**
+   - Go to [Google Account Settings](https://myaccount.google.com/)
+   - Navigate to **Security** → **2-Step Verification** → **App passwords**
+   - Generate a new app password for "Mail"
+   - **Save this 16-character password** - you'll need it for EMAIL_PASSWORD
+3. **Note your Gmail address** - you'll need it for EMAIL_USERNAME and EMAIL_DEFAULT_SENDER
+
+##### Option B: Create New Gmail Account for Business/Testing Use
+1. **Create a new Gmail account** specifically for your business/application
+   - Go to [accounts.google.com](https://accounts.google.com/signup)
+   - Choose a professional email like: `yourbusiness.orders@gmail.com`
+2. **Enable 2-Factor Authentication** on the new account
+3. **Generate Gmail App Password** (follow steps from Option A)
+4. **Note the credentials:**
+   - **Email address:** `yourbusiness.orders@gmail.com`
+   - **App password:** The 16-character password generated
+
+##### Required Email Information to Collect:
+- **EMAIL_USERNAME:** Your Gmail address
+- **EMAIL_PASSWORD:** Your Gmail App Password (16 characters, no spaces)
+- **EMAIL_DEFAULT_SENDER:** Display name and email like `"Your Business <yourbusiness@gmail.com>"`
+
+**Important:** Regular Gmail passwords will NOT work - you must use App Passwords
+
+#### Step 5: Deploy the Web Application
 1. In Render dashboard, click **"New +"** → **"Web Service"**
 2. Connect your GitHub repository
 3. Configure the service:
@@ -105,46 +133,27 @@ This application is designed to deploy easily on **Render** (render.com), which 
    - **Start Command:** `gunicorn app:app`
    - **Plan:** Choose **Free** for testing
 
-#### Step 5: Configure Environment Variables (BEFORE FIRST DEPLOY)
+#### Step 6: Configure Environment Variables (BEFORE FIRST DEPLOY)
 **CRITICAL:** Add these environment variables BEFORE your first deployment:
 
-**Required (Must have these or app won't start):**
+**Required Database & Security:**
 - `DATABASE_URL` = **The Internal Database URL from Step 3**
-- `SECRET_KEY` = Generate a random 32+ character string
+- `SECRET_KEY` = Generate a random 32+ character string (use: https://randomkeygen.com/)
 
-**Your App URL (add after first deploy):**
-- `BASE_URL` = Your app's URL (Render will show this after deployment)
+- See `.env.example` for the environment variable formats.
 
-**Email Configuration:**
-- `EMAIL_HOST` = `smtp.gmail.com`
-- `EMAIL_PORT` = `587`
-- `EMAIL_USE_TLS` = `true`
-- `EMAIL_USERNAME` = Business Gmail Address
-- `EMAIL_PASSWORD` = Gmail App Password (not regular password, find in your Google Workspace account settings)
-- `EMAIL_DEFAULT_SENDER` = "Add Name <add_name@addemail.com>"
+#### Step 7: Complete Deployment
+1. Click **"Create Web Service"**
+2. Wait for deployment to complete (5-10 minutes)
+3. **The database schema will automatically initialize on first startup**
+4. **Copy your app's URL** from the Render dashboard
+5. **Update the BASE_URL environment variable** with this URL
+6. **Redeploy the service** (click "Manual Deploy" → "Deploy latest commit")
 
-
-#### Step 7: Create First Admin Account
+#### Step 8: Create First Admin Account
 1. Visit your app URL + `/admin_setup` (e.g., `https://your-app-name.onrender.com/admin_setup`)
 2. Fill out the form to create your first admin account
 3. Log in and start creating orders!
-
-#### Step 7: Create First Admin Account
-
-1. Visit your deployed app URL + `/admin_setup` (e.g., `https://your-app.onrender.com/admin_setup`)
-2. Fill out the form to create your first admin account credentials
-3. Log in with your new admin credentials
-4. This route automatically disables itself after the first admin is created.
-
-**After Initial Setup:**
-- Use the staff registration feature to add additional staff members
-
-### Notes for Professors
-
-**Render Free Tier**
-- **Database:** 90 day limit, then deletes.
-- **Web Service:** Sleeps after 15 minutes of inactivity. **You may need to wait up to 2 minutes for the service to reload.**
-- **Storage:** Static PDF and QR files get deleted after every redeploy. Please only deploy once.
-- **Grading:** The free tier is perfect for evaluation. You can create test orders and view them in the dashboard. 
+**Note** - once an admin account is created for your environment, this URL redirects back to the login page. 
 
 
