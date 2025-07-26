@@ -8,51 +8,22 @@
   <p><strong>Invoice #:</strong> {{ invoice_no }}</p>    <!-- added invoice -->
 
   <div class="current">
-    {% set ns = namespace(current_milestone=None, current_status="Not Started") %}
-    
-    {# Find the actual current milestone based on status, not just is_approved #}
+    {% set ns = namespace(next_milestone=None) %}
     {% for m in milestones %}
-      {% if m.status == 'In Progress' %}
-        {% set ns.current_milestone = m %}
-        {% set ns.current_status = "In Progress" %}
-      {% elif m.status == 'Completed' and m.is_approved %}
-        {% set ns.current_milestone = m %}
-        {% set ns.current_status = "Completed" %}
+      {% if not m.is_approved and not ns.next_milestone %}
+        {% set ns.next_milestone = m %}
       {% endif %}
     {% endfor %}
-    
-    {# If no milestone is currently in progress, find the last completed one #}
-    {% if not ns.current_milestone %}
-      {% for m in milestones %}
-        {% if m.is_approved %}
-          {% set ns.current_milestone = m %}
-          {% set ns.current_status = "Completed" %}
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-    
-    {# Display current status #}
-    {% if ns.current_milestone %}
-      Your order is in <strong>{{ ns.current_milestone.milestone_name }}</strong>
-      <span class="badge bg-{{ 'warning' if ns.current_status == 'In Progress' else 'success' }}">
-        {{ ns.current_status }}
-      </span>
+    {% if ns.next_milestone %}
+      {% set idx = milestones.index(ns.next_milestone) %}
+      {% if idx > 0 %}
+        {% set current = milestones[idx-1] %}
+        Your order is in <strong>{{ current.milestone_name }}</strong>
+      {% else %}
+        Your order has <strong>not started</strong>
+      {% endif %}
     {% else %}
-      Your order has <strong>not started</strong>
-    {% endif %}
-    
-    {# Check if all milestones are completed #}
-    {% set all_complete = true %}
-    {% for m in milestones %}
-      {% if not m.is_approved %}
-        {% set all_complete = false %}
-      {% endif %}
-    {% endfor %}
-    
-    {% if all_complete %}
-      <div class="text-success mt-2">
-        <strong> All milestones completed!</strong>
-      </div>
+      <span class="text-success">All milestones completed!</span>
     {% endif %}
   </div>
 

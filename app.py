@@ -525,26 +525,14 @@ def add_staff():
 @app.route("/scan/<int:order_id>", methods=["GET"])
 @login_required
 def scan_view(order_id):
-    # Get invoice_no for display
-    order_rows = execute(
-        "SELECT invoice_no FROM orders WHERE order_id = %s",
-        (order_id,)
-    )
-    if not order_rows:
-        abort(404)
-    invoice_no = order_rows[0]["invoice_no"]
-    
-    # Get current milestone statuses
     milestones = execute(
         "SELECT milestone_id, milestone_name, stage_number, status, is_client_action, is_approved "
         "FROM order_milestones WHERE order_id = %s ORDER BY stage_number",
         (order_id,)
     ) or []
-    
     return render_template(
         "scan.html",
         order_id=order_id,
-        invoice_no=invoice_no,
         milestones=milestones
     )
 
