@@ -31,7 +31,7 @@
         <select id="milestoneSelect" class="form-select" required>
           <option value="" disabled selected>-- Select milestone --</option>
           {% for m in milestones %}
-            {% if not m.is_approved %}
+            {% if m.status != 'Completed' or not m.is_approved %}
               <option value="{{ m.milestone_id }}">
                 {{ m.milestone_name }} 
                 <span class="text-muted">({{ m.status }})</span>
