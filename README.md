@@ -164,6 +164,5 @@ This application is designed to deploy easily on **Render** (render.com), which 
 8. **Wait for redeploy** to complete (3-5 minutes)
 9. **The database schema will automatically initialize on first startup**
 
-**Example BASE_URL:**
 
 
