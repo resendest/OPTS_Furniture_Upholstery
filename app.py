@@ -155,7 +155,7 @@ def create_order_page():
             flash(f"Error creating order: {e}", "error")
             return redirect(url_for("create_order_page"))
 
-        flash(f"Order #{info['order_id']} created successfully!", "success")
+        flash(f"Invoice #{info['invoice_no']} created successfully!", "success")
 
         # ————— Generate & persist a one-time registration token —————
         customer_id = info["customer_id"]
