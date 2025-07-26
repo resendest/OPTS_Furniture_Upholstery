@@ -308,7 +308,6 @@ def logout():
     session.pop("customer_id", None)
     session.pop("user_id", None)
     session.pop("is_staff", None)
-    flash("You have been logged out.", "info")
     return redirect(url_for("home"))
 
 
