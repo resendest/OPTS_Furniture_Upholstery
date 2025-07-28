@@ -9,6 +9,7 @@ from flask import current_app
 # create the Mail instance
 mail = Mail()
 
+# Function to initialize Flask-Mail with app configuration
 def init_mail(app):
     """
     Configure Flask-Mail on the app and attach the Mail() instance.

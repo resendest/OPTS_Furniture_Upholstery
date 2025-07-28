@@ -14,6 +14,7 @@ from reportlab.lib import colors
 from backend.db import execute
 from backend.qr_utils import generate_order_qr
 
+# Define the base directory and paths for QR codes and work orders
 BASE_DIR = pathlib.Path(__file__).resolve().parent.parent
 QR_DIR = BASE_DIR / "static" / "qr"
 WORK_DIR = BASE_DIR / "static" / "work_orders"

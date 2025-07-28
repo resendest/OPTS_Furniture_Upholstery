@@ -353,8 +353,8 @@ def client_dashboard():
 
     return render_template("client_dashboard.html", orders=orders)
 
-    
 
+# ————— Order status page (for clients) —————
 @app.route("/status/<int:order_id>")
 def order_status(order_id):
     cid = session.get("customer_id")
@@ -384,7 +384,7 @@ def order_status(order_id):
         order=order,
         milestones=milestones
     )
-
+# ————— Staff portal (master dashboard) —————
 @app.route("/portal")
 def portal():
     if not session.get("is_staff"):
@@ -442,6 +442,7 @@ def portal():
         milestone_counts=milestone_counts
     )
 
+# ————— Edit order milestones (staff only) —————
 @app.route("/order/<int:order_id>/edit", methods=["POST"])
 @login_required
 def edit_order(order_id):
@@ -482,6 +483,7 @@ def edit_order(order_id):
 
     return redirect(url_for("view_order", order_id=order_id))
 
+# ————— Add new staff user (staff only) —————
 @app.route("/add_staff", methods=["GET", "POST"])
 def add_staff():
     # Only allow current staff to add new staff
@@ -521,6 +523,7 @@ def add_staff():
         return redirect(url_for("portal"))
     return render_template("add_staff.html")
 
+# ————— Scan view for staff (view order milestones) —————
 @app.route("/scan/<int:order_id>", methods=["GET"])
 @login_required
 def scan_view(order_id):
@@ -535,6 +538,7 @@ def scan_view(order_id):
         milestones=milestones
     )
 
+# ————— Delete order (staff only) —————
 @app.route("/order/<int:order_id>/delete", methods=["POST"])
 def delete_order(order_id):
     if not session.get("is_staff"):
@@ -550,6 +554,7 @@ def delete_order(order_id):
     flash(f"Order deleted", "success")
     return redirect(url_for("portal"))
 
+# ————— Load customer name into g.customer_name for templates —————
 @app.before_request
 def load_customer():
     g.customer_name = None
@@ -559,15 +564,13 @@ def load_customer():
         if rows:
             g.customer_name = rows[0]["name"]
 
+# Inject customer name into all templates
 @app.context_processor
 def inject_customer_name():
     return {"customer_name": getattr(g, "customer_name", None)}
 
 # Client-provided milestone choices
 # These are the milestones that can be selected when creating an order
-# They represent the various stages of the order processing workflow.
-# They are used to track the progress of an order through its lifecycle.
-# The choices are displayed in the order creation form and can be selected by the staff.
 # This list can be extended with new milestones as needed
 MILESTONE_CHOICES = [
   "Custom Material Preparation",
@@ -584,7 +587,7 @@ MILESTONE_CHOICES = [
 def inject_milestone_choices():
     return dict(milestone_choices=MILESTONE_CHOICES)
 
-
+# ————— View order details (staff only) —————
 @app.route("/order/<int:order_id>")
 def view_order(order_id):
     # Get order details
@@ -634,6 +637,7 @@ def view_order(order_id):
         milestones=milestones or []  # Make sure milestones is passed
     )
 
+# ————— Admin setup route (for first-time deployment) —————
 @app.route("/admin_setup", methods=["GET", "POST"])
 def admin_setup():
     # Check if any staff users already exist
