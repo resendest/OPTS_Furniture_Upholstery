@@ -8,6 +8,8 @@ from backend.db import execute
 
 shop_bp = Blueprint("shop", __name__)
 
+# Endpoint to scan an order using a QR code
+# This endpoint retrieves the invoice number and current milestones for the order.
 @shop_bp.route("/scan/<int:order_id>", methods=["GET"])
 def scan_order(order_id):
     # 1) Fetch invoice_no

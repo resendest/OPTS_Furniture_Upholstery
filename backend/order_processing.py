@@ -1,6 +1,8 @@
 # This file pertains to the order creation and processing logic for the OPTS application.
 # It handles the creation of new orders, including customer details, product codes,
 # and order specifications. 
+# It also generates 2 work order PDFs and a QR code for each order.
+# One PDF is for internal use and includes the QR code, and the other is for the client.
 import pathlib
 from datetime import datetime
 from reportlab.lib.pagesizes import LETTER

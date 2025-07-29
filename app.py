@@ -219,7 +219,7 @@ def order_created(order_id):
     )
     if not rows:
         flash(f"Order #{order_id} not found.", "error")
-        return redirect(url_for("home"))  # changed from "index"
+        return redirect(url_for("home"))  
 
     order = rows[0]
     return render_template(
@@ -251,7 +251,7 @@ def register():
     )
     if not rows:
         flash("Invalid or expired registration link.", "danger")
-        return redirect(url_for("home"))  # changed from "index"
+        return redirect(url_for("home"))  
     cust = rows[0]
 
     if request.method == "POST":
