@@ -29,7 +29,7 @@ def init_mail(app):
 # Sending registration email
 def send_registration_email(user_id: int, to_addr: str, token: str, order_id: int):
     """
-    Example helper you already tried before—uses app.config['BASE_URL'].
+    Send registration email to new customer with account setup link.
     """
     msg = Message(
         subject="Complete Your Registration",
