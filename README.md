@@ -1,4 +1,4 @@
-**Order Processing and Tracking System (OPTS)**
+# Order Processing and Tracking System (OPTS)
 
 Created by Wentworth students Tyler Resendes and Samuel Gjencaj for their Summer 2025 MGMT 5510 - CIS Senior Capstone course.
 
@@ -40,7 +40,7 @@ The system supports role-based access, milestone customization, QR code scanning
 - `templates/` — Folder for all HTML/CSS templates
 - `sql/v3_lousso_opts_schema.sql` — Database schema
 
-## User Priveleges
+## User Privileges
 
 - **Staff:** Log in, create orders, select milestones, and manage progress.
 - **Clients:** Log in to view their orders and download PDFs.
@@ -51,118 +51,231 @@ The system supports role-based access, milestone customization, QR code scanning
 - Edit the master milestone list in `app.py` (or move to DB for dynamic management).
 - Only selected milestones are saved per order and shown on scan/detail pages.
 
-## Deployment Instructions
+---
+
+## Instructions
+
+This README provides two sets of instructions:
+- **For Professors/Academic Evaluation** - Quick assessment and optional testing
+- **For Production Deployment** - Complete live deployment on Render
+
+---
+
+## For Professors/Academic Evaluation
 
 
-**Option 1: GitHub Deployment (Recommended)**
-- Best for production use
-- Automatic updates and version control
-- Direct integration with Render hosting
+### Option 1: Code Review Only (Recommended)
+**For evaluating code structure, logic, and design:**
+- All source files included in this submission
+- Database schema available in `sql/v3_lousso_opts_schema.sql`
+- Architecture and business logic documented throughout codebase
+- **No setup required** - just review the files
 
-**Option 2: Zip File Deployment**
-- If you received this project as a zip file
-- Requires uploading to GitHub first
-- See "Zip File Setup" section below
+**Demo video can be found in submission**
 
+### Option 2: Local Testing Setup (Optional)
+**If you want to run the application locally for hands-on evaluation:**
 
-This application is designed to deploy easily on **Render** (render.com), which provides reliable web hosting with PostgreSQL database support.
+#### Prerequisites:
+- Python 3.8+ installed
+- PostgreSQL installed and running locally
 
-#### Step 1: Create Render Account
-1. Go to Render website (render.com) and create an account
-2. Connect your GitHub account to Render (create GitHub account if you do not already have one)
+#### Quick Setup (10 minutes):
+1. **Create local database:**
+   ```sql
+   -- Connect to PostgreSQL as admin user
+   psql -U postgres
+   
+   -- Create database and user
+   CREATE DATABASE opts;
+   CREATE USER opts_user WITH PASSWORD 'test_password';
+   GRANT ALL PRIVILEGES ON DATABASE opts TO opts_user;
+   \q
+   ```
 
-#### Step 2: Prepare Your Repository
-- **If using GitHub:** Fork this repository to your account
-- **If using zip file:** Follow "Zip File Setup" instructions below first
+2. **Configure environment:**
+   ```bash
+   # Copy template
+   cp .env.example .env
+   ```
+   
+   **Edit `.env` with these test values:**
+   ```bash
+   DATABASE_URL=postgresql://opts_user:test_password@localhost:5432/opts
+   SECRET_KEY=test_key_for_academic_evaluation_32chars
+   BASE_URL=http://localhost:5000
+   
+   # Email settings (optional - app works without these)
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_USE_TLS=true
+   EMAIL_USERNAME=test@example.com
+   EMAIL_PASSWORD=dummy_password
+   EMAIL_DEFAULT_SENDER="Test <test@example.com>"
+   ```
 
-#### Extract ZIP File and Upload to GitHub
-1. **Extract the zip file** to your computer
-2. **Create a new repository** on [GitHub](https://github.com)
-3. **Upload all files** to your new GitHub repository:
-4. **Refer to step 2 under Quick Start**
+3. **Install and run:**
+   ```bash
+   pip install -r requirements.txt
+   python app.py
+   ```
 
-#### Step 3: Create PostgreSQL Database FIRST
-1. In Render dashboard, click **"New +"** → **"PostgreSQL"**
-2. Configure the database:
-   - **Name:** `opts-database` (or your preferred name)
-   - **Plan:** Choose **Free** for testing
-   - **Region:** Choose closest to your location (Ohio is used for Eastern US)
-3. Click **"Create Database"**
-4. **IMPORTANT:** Copy the **Internal Database URL** from the database info page
-   - It will look like: `postgresql://username:password@hostname/database_name/...`
-   - **Save this URL!** - you'll need it in the next step
-5. Save this under a project, as you'll need to combine your database and web service in the same project.
+4. **Access application:**
+   - Visit: http://localhost:5000/admin_setup
+   - Create test admin account
+   - Explore all features
 
-#### Step 4: Prepare Email Configuration
+#### What Works Locally:
+- Complete order management system
+- User authentication and role-based access
+- Database operations and milestone tracking
+- PDF generation and QR code creation
+- All web interfaces and forms
+- Email notifications (requires Gmail App Password setup - see production instructions)
 
-**The application requires email configuration to send registration links to new users. You have two options:**
+---
 
-##### Option A: Use Existing Gmail Account
-1. **Enable 2-Factor Authentication** on your Gmail account (required for App Passwords)
-2. **Generate Gmail App Password:**
+## For Production Deployment
+
+**Complete instructions for deploying a live version on Render hosting platform:**
+
+### Prerequisites:
+- GitHub account
+- Gmail account (for email notifications)
+- Render account (free tier available at render.com)
+
+### Deployment Options:
+
+**Option 1: GitHub Repository (Recommended)**
+- Fork this repository to your GitHub account
+- Best for version control and automatic updates
+
+**Option 2: Zip File Upload**
+1. Create new repository on [GitHub](https://github.com)
+2. Upload all project files from the zip submission
+3. Commit changes to your new repository
+
+### Step 1: Set Up Gmail for Email Notifications
+**The application sends registration emails to clients. Choose one option:**
+
+#### Option A: Use Existing Gmail Account
+1. **Enable 2-Factor Authentication** (required for App Passwords)
+2. **Generate App Password:**
    - Go to [Google Account Settings](https://myaccount.google.com/)
-   - Once logged in, search for **App Passwords (Security)**
-   - Generate a new app password for "Mail"
-   - **Save this 16-character password** - you'll need it for EMAIL_PASSWORD
-3. **Note your Gmail address** - you'll need it for EMAIL_USERNAME and EMAIL_DEFAULT_SENDER
+   - Search for **App Passwords** under Security
+   - Generate password for "Mail" application
+   - **Save the 16-character password** (format: `abcd efgh ijkl mnop`)
 
-##### Option B: Create New Gmail Account for Business/Testing Use
-1. **Create a new Gmail account** specifically for your business/application
-   - Go to [accounts.google.com](https://accounts.google.com/signup)
-   - Choose a professional email like: `yourbusiness.orders@gmail.com`
-2. **Enable 2-Factor Authentication** on the new account
-3. **Generate Gmail App Password** (follow steps from Option A)
-4. **Note the credentials:**
-   - **Email address:** `yourbusiness.orders@gmail.com`
-   - **App password:** The 16-character password generated
+#### Option B: Create Business Gmail Account
+1. Create new Gmail account (e.g., `yourbusiness.orders@gmail.com`)
+2. Enable 2-Factor Authentication
+3. Generate App Password (follow Option A steps)
 
-##### Required Email Information to Collect:
-- **EMAIL_USERNAME:** Your Gmail address
-- **EMAIL_PASSWORD:** Your Gmail App Password (16 characters, no spaces)
-- **EMAIL_DEFAULT_SENDER:** Display name and email like `"Your Business <yourbusiness.orders@gmail.com>"`
-
-**It is important to ensure that EMAIL_USERNAME and EMAIL_DEFAULT_SENDER have the same e-mail address.**
+**Required Information to Collect:**
+- Gmail address for `EMAIL_USERNAME`
+- 16-character App Password for `EMAIL_PASSWORD`
+- Display name for `EMAIL_DEFAULT_SENDER` (e.g., `"Your Business <email@gmail.com>"`)
 
 **Important:** Regular Gmail passwords will NOT work - you must use App Passwords
 
-#### Step 5: Start Web Application Setup
-1. In Render dashboard, click **"New +"** → **"Web Service"**
+### Step 2: Deploy to Render
+
+#### 2.1: Create Database
+1. Go to [Render Dashboard](https://dashboard.render.com)
+2. Click **"New +"** → **"PostgreSQL"**
+3. Configure database:
+   - **Name:** `opts-database`
+   - **Plan:** Free (for testing) or paid (for production)
+   - **Region:** Choose closest to your users
+4. Click **"Create Database"**
+5. **Copy the Internal Database URL** - save this for the web service setup
+
+#### 2.2: Create Web Service
+1. Click **"New +"** → **"Web Service"**
 2. Connect your GitHub repository
-3. Configure the service:
-   - **Name:** `opts-lousso-designs` (or your preferred name)
+3. Configure service:
+   - **Name:** `opts-your-business-name`
    - **Environment:** `Python 3`
    - **Build Command:** `pip install -r requirements.txt`
    - **Start Command:** `gunicorn app:app`
-   - **Plan:** Choose **Free** for testing
-4. **STOP HERE - DO NOT CLICK "CREATE WEB SERVICE" YET**
+   - **Plan:** Free (for testing) or paid (for production)
 
-#### Step 6: Configure Environment Variables (BEFORE DEPLOYMENT)
-**CRITICAL:** Add these environment variables BEFORE clicking "Create Web Service":
+#### 2.3: Configure Environment Variables
+**Add these environment variables BEFORE deploying:**
 
-**Required Database & Security:**
-- `DATABASE_URL` = **The Internal Database URL from Step 3**
-- `SECRET_KEY` = Generate a random 32+ character string (or let Render generate one)
+**Database & Security:**
+- `DATABASE_URL` = Internal Database URL from Step 2.1
+- `SECRET_KEY` = Generate 32+ character random string
 
-**Required Email Configuration:**
-- See `.env.example` for all email environment variables
-- Use the credentials from Step 4
+**Email Configuration:**
+- `EMAIL_HOST` = `smtp.gmail.com`
+- `EMAIL_PORT` = `587`
+- `EMAIL_USE_TLS` = `true`
+- `EMAIL_USERNAME` = Your Gmail address
+- `EMAIL_PASSWORD` = Your Gmail App Password (16 characters)
+- `EMAIL_DEFAULT_SENDER` = `"Your Business <youremail@gmail.com>"`
 
-**How to Add Environment Variables:**
-1. **Scroll down** to the "Advanced" section on the web service setup page
-2. **Click "Add Environment Variable"** for each one needed
-3. **Enter the variable name** and **paste the value**
-4. **Verify DATABASE_URL** matches exactly what you copied from Step 3
+**How to Add Variables:**
+1. Scroll to "Environment Variables" section on the web service setup page
+2. Click "Add Environment Variable" for each one
+3. Enter exact variable name and corresponding value
+4. Verify `DATABASE_URL` starts with `postgresql://`
 
-#### Step 7: Complete Deployment and Configure BASE_URL
-1. **After all environment variables are added**, click **"Create Web Service"**
-2. **Wait for initial deployment** to complete (5-10 minutes)
-3. **IMPORTANT:** The first deployment will work, but QR codes and emails will have incorrect URLs
-4. **Copy your app's URL** from the Render dashboard (e.g., `https://your-app-name.onrender.com`)
-5. **Go to Environment Variables** in your service settings
-6. **Add BASE_URL environment variable** with your app's URL (no trailing slash)
-7. **Click "Manual Deploy"** → **"Deploy latest commit"** to apply the BASE_URL setting
-8. **Wait for redeploy** to complete (3-5 minutes)
-9. **The database schema will automatically initialize on first startup**
+#### 2.4: Deploy and Configure URL
+1. Click **"Create Web Service"**
+2. Wait for initial deployment (5-10 minutes)
+3. **Copy your app URL** from Render dashboard
+4. **Add `BASE_URL` environment variable** with your app URL (no trailing slash)
+5. **Manual Deploy** to apply BASE_URL changes
+6. Wait for redeploy (3-5 minutes)
+
+### Step 3: Initialize Application
+1. Visit `https://your-app-name.onrender.com/admin_setup`
+2. Create your admin account
+3. Test order creation and email functionality
+4. Verify QR codes point to your Render URL (not localhost)
+
+### Production Considerations:
+
+#### Free Tier Limitations:
+- Database: 90-day limit, then deleted
+- Web service: Goes to sleep after 15 minutes of inactivity
+- Storage: Temporary file storage only
+
+#### For Business Use:
+- Upgrade to paid plans for persistent data
+- Set up automated database backups
+- Configure custom domain name
+- Monitor application logs regularly
+
+### Troubleshooting:
+
+#### "Application failed to respond"
+- Verify `DATABASE_URL` is complete and correct
+- Check all required environment variables are set
+- Review build logs for dependency errors
+
+#### "SMTP Authentication Error"
+- Confirm Gmail App Password is correct (16 characters)
+- Ensure 2-Factor Authentication is enabled on Gmail
+- Verify `EMAIL_USERNAME` matches Gmail account
+
+#### QR Codes Point to "localhost"
+- Add/update `BASE_URL` environment variable
+- Redeploy application after adding `BASE_URL`
+- Ensure format: `https://your-app.onrender.com` (no trailing slash)
+
+---
+
+## Support
+
+**For Academic Evaluation:**
+- All code and documentation included in submission
+
+**For Production Deployment:**
+- Render documentation: [docs.render.com](https://docs.render.com)
+- Gmail App Passwords help: [support.google.com/accounts/answer/185833](https://support.google.com/accounts/answer/185833)
+- Flask documentation: [flask.palletsprojects.com](https://flask.palletsprojects.com/)
 
 
 
