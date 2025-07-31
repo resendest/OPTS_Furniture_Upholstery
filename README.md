@@ -185,7 +185,7 @@ This README provides two sets of instructions:
 2. Click **"New +"** → **"PostgreSQL"**
 3. Configure database:
    - **Name:** `opts-database`
-   - **Plan:** Free (for testing) or paid (for production)
+   - **Plan:** Free (for testing) or Professional (for production)
    - **Region:** Choose closest to your users
 4. Click **"Create Database"**
 5. **Copy the Internal Database URL** - save this for the web service setup
@@ -275,7 +275,6 @@ This README provides two sets of instructions:
 **For Production Deployment:**
 - Render documentation: [docs.render.com](https://docs.render.com)
 - Gmail App Passwords help: [support.google.com/accounts/answer/185833](https://support.google.com/accounts/answer/185833)
-- Flask documentation: [flask.palletsprojects.com](https://flask.palletsprojects.com/)
 
 
 
