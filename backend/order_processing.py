@@ -259,5 +259,5 @@ def create_order(
             order_id
         )
     )
-
+# Return order details including paths and QR code URL
     return {"order_id": order_id, "invoice_no": invoice_no, "qr": qr_url, "customer_id": customer_id}

@@ -579,7 +579,7 @@ MILESTONE_CHOICES = [
   "Awaiting Quality Check",
   "Passed Quality Check",
   "Out for Delivery",
-  # …any new ones can be added here
+  # …any new ones can be added here (can be extended by staff only, if needed)
 ]
 
 # inject into ALL templates

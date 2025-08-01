@@ -6,6 +6,7 @@ from flask import (
 )
 from backend.db import execute
 
+# Create a Blueprint for shop-related routes
 shop_bp = Blueprint("shop", __name__)
 
 # Endpoint to scan an order using a QR code
